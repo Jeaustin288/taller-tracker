@@ -140,12 +140,13 @@ def guardar_taller():
         return jsonify({"error": "Chasis requerido"}), 400
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, problemas, origen_dano, notas)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (chasis) DO UPDATE SET
-            fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, origen_dano=%s, notas=%s
-    """, (chasis, data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
-          data.get("problemas"), data.get("origen_dano"), data.get("notas"),
-          data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
-          data.get("problemas"), data.get("
+    try:
+        cur.execute("""
+            INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, problemas, origen_dano, notas)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            ON CONFLICT (chasis) DO UPDATE SET
+                fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, origen_dano=%s, notas=%s
+        """, (chasis, data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
+              data.get("problemas"), data.get("origen_dano"), data.get("notas"),
+              data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
+  
