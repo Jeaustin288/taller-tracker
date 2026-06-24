@@ -23,11 +23,17 @@ def init_db():
     """)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS taller_data (
-            chasis TEXT PRIMARY KEY, fecha_entrada TEXT,
-            fecha_salida_est TEXT, problemas TEXT, notas TEXT,
+            chasis TEXT PRIMARY KEY, fecha_reporte TEXT, fecha_entrada TEXT,
+            fecha_salida_est TEXT, problemas TEXT, origen_dano TEXT, notas TEXT,
             FOREIGN KEY (chasis) REFERENCES vehiculos(chasis)
         );
     """)
+    # Agregar columnas nuevas si la tabla ya existe
+    for col in [("fecha_reporte", "TEXT"), ("origen_dano", "TEXT")]:
+        try:
+            cur.execute(f"ALTER TABLE taller_data ADD COLUMN {col[0]} {col[1]}")
+        except Exception:
+            pass
     conn.commit()
     cur.close()
     conn.close()
@@ -94,7 +100,7 @@ def vehiculos_taller():
                v.estado2, v.ubicacion, v.localizacion2, v.producto, v.ultima_toma,
                CASE WHEN v.ubicacion = 'TALLER PINTURA' THEN 'pintura'
                     ELSE 'mecanica' END AS taller,
-               t.fecha_entrada, t.fecha_salida_est, t.problemas, t.notas
+               t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est, t.problemas, t.origen_dano, t.notas
         FROM vehiculos v
         LEFT JOIN taller_data t ON v.chasis = t.chasis
         WHERE v.ubicacion IN ('TALLER MECANICA', 'TALLER PINTURA')
@@ -134,31 +140,14 @@ def guardar_taller():
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO taller_data (chasis, fecha_entrada, fecha_salida_est, problemas, notas)
-        VALUES (%s,%s,%s,%s,%s)
+        INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, problemas, origen_dano, notas)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
         ON CONFLICT (chasis) DO UPDATE SET
-            fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, notas=%s
-    """, (chasis, data.get("fecha_entrada"), data.get("fecha_salida_est"),
-          data.get("problemas"), data.get("notas"),
-          data.get("fecha_entrada"), data.get("fecha_salida_est"),
-          data.get("problemas"), data.get("notas")))
+            fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, origen_dano=%s, notas=%s
+    """, (chasis, data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
+          data.get("problemas"), data.get("origen_dano"), data.get("notas"),
+          data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
+          data.get("problemas"), data.get("origen_dano"), data.get("notas")))
     conn.commit()
     cur.close()
-    conn.close()
-    return jsonify({"ok": True})
-
-@app.route("/api/eliminar_taller/<chasis>", methods=["DELETE"])
-def eliminar_taller(chasis):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM taller_data WHERE chasis=%s", (chasis,))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"ok": True})
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-# taller-tracker v1.0
-# taller-tracker
+    c

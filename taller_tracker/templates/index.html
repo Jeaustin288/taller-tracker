@@ -170,12 +170,14 @@
                 <tr>
                   <th>Chasis</th>
                   <th>Vehículo</th>
+                  <th>F. Reporte</th>
                   <th>Entrada</th>
                   <th>Salida Est.</th>
                   <th>Días</th>
                   <th>Taller</th>
                   <th>Estado2</th>
                   <th>Problemas</th>
+                  <th>Origen de Daño</th>
                   <th></th>
                 </tr>
               </thead>
@@ -216,18 +218,27 @@
 
         <input type="hidden" id="m-chasis-hidden">
         <div class="row g-3">
-          <div class="col-sm-6">
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Fecha de reporte</label>
+            <input type="date" class="form-control" id="m-fecha-reporte">
+          </div>
+          <div class="col-sm-4">
             <label class="form-label fw-semibold">Fecha de entrada</label>
             <input type="date" class="form-control" id="m-fecha-entrada">
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-4">
             <label class="form-label fw-semibold">Fecha estimada de salida</label>
             <input type="date" class="form-control" id="m-fecha-salida">
           </div>
-          <div class="col-12">
+          <div class="col-sm-6">
             <label class="form-label fw-semibold">Problemas que presenta</label>
             <textarea class="form-control" id="m-problemas" rows="3"
               placeholder="Descripción de los problemas del vehículo…"></textarea>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Origen de daño</label>
+            <textarea class="form-control" id="m-origen-dano" rows="3"
+              placeholder="Origen del daño del vehículo…"></textarea>
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">Notas adicionales</label>
@@ -375,12 +386,14 @@ function renderTable() {
         <div class="fw-semibold">${v.marca} ${v.modelo}</div>
         <div class="text-muted small">${v.color}</div>
       </td>
+      <td class="small">${formatDate(v.fecha_reporte)}</td>
       <td class="small">${formatDate(v.fecha_entrada)}</td>
       <td class="small">${formatDate(v.fecha_salida_est)}</td>
       <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
       <td>${tallerTag}</td>
       <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
       <td>${problemasTxt}</td>
+      <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
       <td>
         <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
           onclick="openEditById('${escapeHtml(v.chasis)}')">
@@ -441,9 +454,11 @@ function openEdit(v) {
   document.getElementById('m-ubicacion').textContent    = v.ubicacion || v.localizacion2 || '—';
   document.getElementById('m-cliente').textContent      = v.cliente || '—';
   document.getElementById('m-chasis-hidden').value      = v.chasis;
+  document.getElementById('m-fecha-reporte').value      = v.fecha_reporte || '';
   document.getElementById('m-fecha-entrada').value      = v.fecha_entrada || '';
   document.getElementById('m-fecha-salida').value       = v.fecha_salida_est || '';
   document.getElementById('m-problemas').value          = v.problemas || '';
+  document.getElementById('m-origen-dano').value        = v.origen_dano || '';
   document.getElementById('m-notas').value              = v.notas || '';
   editModal.show();
 }
@@ -451,9 +466,11 @@ function openEdit(v) {
 async function guardarTaller() {
   const payload = {
     chasis:           document.getElementById('m-chasis-hidden').value,
+    fecha_reporte:    document.getElementById('m-fecha-reporte').value,
     fecha_entrada:    document.getElementById('m-fecha-entrada').value,
     fecha_salida_est: document.getElementById('m-fecha-salida').value,
     problemas:        document.getElementById('m-problemas').value,
+    origen_dano:      document.getElementById('m-origen-dano').value,
     notas:            document.getElementById('m-notas').value,
   };
   const res  = await fetch('/api/guardar_taller', {
@@ -537,4 +554,4 @@ function showToast(msg, type='success') {
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
