@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracker de Talleres — AGE Holding</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    --brand: #1a3a5c;
+    --brand-light: #2c5f9b;
+    --accent: #e8a020;
+  }
+  body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+  .navbar { background: var(--brand) !important; }
+  .navbar-brand { font-weight: 700; color: white !important; letter-spacing: 1px; }
+  .nav-link { color: rgba(255,255,255,.8) !important; }
+  .nav-link.active { color: white !important; font-weight: 600; }
+
+  .card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .card-header { border-radius: 12px 12px 0 0 !important; }
+
+  /* Status badges */
+  .badge-disponible   { background:#198754; color:#fff; }
+  .badge-vendido      { background:#0d6efd; color:#fff; }
+  .badge-reservado    { background:#fd7e14; color:#fff; }
+  .badge-exhibicion   { background:#6f42c1; color:#fff; }
+  .badge-defectuoso   { background:#dc3545; color:#fff; }
+  .badge-default      { background:#6c757d; color:#fff; }
+
+  /* Taller tag */
+  .tag-mecanica { background:#0d6efd22; color:#0d6efd; border:1px solid #0d6efd55; }
+  .tag-pintura  { background:#fd7e1422; color:#c96a00; border:1px solid #fd7e1455; }
+
+  .vehicle-row td { vertical-align: middle; font-size: .9rem; }
+  .chasis-code { font-family: monospace; font-size: .85rem; color: #555; }
+
+  .action-btn { cursor: pointer; padding: 4px 8px; border-radius: 6px; border: none; }
+
+  /* Modal */
+  .modal-header { background: var(--brand); color: white; }
+  .modal-header .btn-close { filter: invert(1); }
+
+  /* Upload zone */
+  #dropzone {
+    border: 2px dashed #aac;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  #dropzone:hover, #dropzone.dragover { background: #e8f0fe; }
+  #dropzone i { font-size: 2.5rem; color: var(--brand-light); }
+
+  .days-badge {
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .days-ok    { background:#d1e7dd; color:#0a3622; }
+  .days-warn  { background:#fff3cd; color:#664d03; }
+  .days-late  { background:#f8d7da; color:#58151c; }
+
+  .search-highlight { background: #fff3cd; }
+
+  #toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <span class="navbar-brand"><i class="bi bi-wrench-adjustable-circle me-2"></i>Tracker de Talleres</span>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <span class="text-white-50 small" id="last-update-label"></span>
+      <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid py-4 px-4">
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4" id="kpi-row">
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-2 fw-bold text-primary" id="kpi-total">—</div>
+        <div class="text-muted small">En taller</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-2 fw-bold" style="color:var(--brand)" id="kpi-mecanica">—</div>
+        <div class="text-muted small">Mecánica</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-2 fw-bold" style="color:var(--accent)" id="kpi-pintura">—</div>
+        <div class="text-muted small">Pintura</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-2 fw-bold text-danger" id="kpi-vencidos">—</div>
+        <div class="text-muted small">Vencidos / Atrasados</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- LEFT: Upload + Add -->
+    <div class="col-lg-3">
+
+      <!-- Upload CSV -->
+      <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-cloud-upload me-2 text-primary"></i>Subir escaneo diario
+        </div>
+        <div class="card-body">
+          <div id="dropzone" onclick="document.getElementById('csv-input').click()">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            <p class="mt-2 mb-0 text-muted">Arrastrá o hacé clic<br><small>Archivo CSV del día</small></p>
+          </div>
+          <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
+          <div id="upload-status" class="mt-2 small"></div>
+        </div>
+      </div>
+
+      <!-- Add vehicle to taller -->
+      <div class="card">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-plus-circle me-2 text-success"></i>Agregar vehículo a taller
+        </div>
+        <div class="card-body">
+          <input type="text" id="search-chasis" class="form-control form-control-sm mb-2"
+            placeholder="Buscar por chasis, marca o modelo…"
+            oninput="searchVehiculo(this.value)">
+          <div id="search-results" class="list-group list-group-flush" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Main table -->
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-header bg-white d-flex align-items-center gap-3">
+          <span class="fw-semibold"><i class="bi bi-table me-2 text-primary"></i>Vehículos en taller</span>
+          <div class="ms-auto d-flex gap-2">
+            <!-- Filter buttons -->
+            <button class="btn btn-sm btn-outline-secondary active" id="filter-all"
+              onclick="setFilter('all')">Todos</button>
+            <button class="btn btn-sm btn-outline-primary" id="filter-mecanica"
+              onclick="setFilter('mecanica')">Mecánica</button>
+            <button class="btn btn-sm btn-outline-warning" id="filter-pintura"
+              onclick="setFilter('pintura')">Pintura</button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="main-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Chasis</th>
+                  <th>Vehículo</th>
+                  <th>Cliente</th>
+                  <th>Taller</th>
+                  <th>Entrada</th>
+                  <th>Salida Est.</th>
+                  <th>Días</th>
+                  <th>Ubicación</th>
+                  <th>Estado2</th>
+                  <th>Problemas</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="taller-tbody">
+                <tr><td colspan="11" class="text-center text-muted py-4">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Edit / Add taller data
+     ============================================================ -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Datos de taller</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Vehicle info (read-only) -->
+        <div class="bg-light rounded p-3 mb-3 small">
+          <div class="row">
+            <div class="col-sm-4"><strong>Chasis:</strong> <span id="m-chasis">—</span></div>
+            <div class="col-sm-4"><strong>Vehículo:</strong> <span id="m-vehiculo">—</span></div>
+            <div class="col-sm-4"><strong>Estado2:</strong> <span id="m-estado2">—</span></div>
+            <div class="col-sm-6 mt-1"><strong>Ubicación actual:</strong> <span id="m-ubicacion">—</span></div>
+            <div class="col-sm-6 mt-1"><strong>Cliente:</strong> <span id="m-cliente">—</span></div>
+          </div>
+        </div>
+
+        <input type="hidden" id="m-chasis-hidden">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Taller</label>
+            <select class="form-select" id="m-taller">
+              <option value="mecanica">Mecánica</option>
+              <option value="pintura">Pintura</option>
+              <option value="ambos">Ambos</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Fecha de entrada</label>
+            <input type="date" class="form-control" id="m-fecha-entrada">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Fecha estimada de salida</label>
+            <input type="date" class="form-control" id="m-fecha-salida">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Problemas que presenta</label>
+            <textarea class="form-control" id="m-problemas" rows="3"
+              placeholder="Descripción de los problemas del vehículo…"></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Notas adicionales</label>
+            <textarea class="form-control" id="m-notas" rows="2"
+              placeholder="Observaciones del encargado…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarTaller()">
+          <i class="bi bi-save me-1"></i>Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+// ---------------------------------------------------------------
+// State
+// ---------------------------------------------------------------
+let allVehiculos = [];
+let currentFilter = 'all';
+let editModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+  editModal = new bootstrap.Modal(document.getElementById('editModal'));
+  loadVehiculos();
+  setupDragDrop();
+});
+
+// ---------------------------------------------------------------
+// Load taller vehicles
+// ---------------------------------------------------------------
+async function loadVehiculos() {
+  try {
+    const res = await fetch('/api/vehiculos_taller');
+    allVehiculos = await res.json();
+    renderTable();
+    updateKPIs();
+    document.getElementById('last-update-label').textContent =
+      'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ['all','mecanica','pintura'].forEach(id => {
+    document.getElementById('filter-'+id).classList.remove('active','btn-outline-secondary','btn-outline-primary','btn-outline-warning','btn-secondary','btn-primary','btn-warning');
+  });
+  const classes = {all:'btn-outline-secondary', mecanica:'btn-outline-primary', pintura:'btn-outline-warning'};
+  document.getElementById('filter-'+f).classList.add('active', classes[f]);
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('taller-tbody');
+  let data = allVehiculos;
+  if (currentFilter !== 'all') data = data.filter(v => v.taller === currentFilter);
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">
+      No hay vehículos en taller${currentFilter !== 'all' ? ' de '+currentFilter : ''}
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(v => {
+    const diasInfo  = calcDias(v.fecha_entrada, v.fecha_salida_est);
+    const estadoBadge = estadoClass(v.estado2);
+    const tallerTag = v.taller === 'pintura'
+      ? `<span class="badge tag-pintura rounded-pill">Pintura</span>`
+      : v.taller === 'ambos'
+      ? `<span class="badge tag-mecanica rounded-pill">Mecánica</span><span class="badge tag-pintura rounded-pill ms-1">Pintura</span>`
+      : `<span class="badge tag-mecanica rounded-pill">Mecánica</span>`;
+
+    const problemasTxt = v.problemas
+      ? `<span title="${escapeHtml(v.problemas)}" style="cursor:help;max-width:150px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(v.problemas)}</span>`
+      : `<span class="text-muted small">—</span>`;
+
+    return `<tr class="vehicle-row">
+      <td><code class="chasis-code">${v.chasis}</code></td>
+      <td>
+        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
+        <div class="text-muted small">${v.color}</div>
+      </td>
+      <td><span class="small">${v.cliente || '—'}</span></td>
+      <td>${tallerTag}</td>
+      <td class="small">${formatDate(v.fecha_entrada)}</td>
+      <td class="small">${formatDate(v.fecha_salida_est)}</td>
+      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
+      <td class="small">${v.ubicacion || v.localizacion2 || '—'}</td>
+      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
+      <td>${problemasTxt}</td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
+            onclick='openEdit(${JSON.stringify(v)})'>
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="action-btn btn btn-sm btn-outline-danger" title="Sacar de taller"
+            onclick="confirmarEliminar('${v.chasis}')">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateKPIs() {
+  document.getElementById('kpi-total').textContent     = allVehiculos.length;
+  document.getElementById('kpi-mecanica').textContent  = allVehiculos.filter(v => v.taller === 'mecanica' || v.taller === 'ambos').length;
+  document.getElementById('kpi-pintura').textContent   = allVehiculos.filter(v => v.taller === 'pintura'  || v.taller === 'ambos').length;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const vencidos = allVehiculos.filter(v => {
+    if (!v.fecha_salida_est) return false;
+    return new Date(v.fecha_salida_est) < hoy;
+  }).length;
+  document.getElementById('kpi-vencidos').textContent = vencidos;
+}
+
+// ---------------------------------------------------------------
+// Upload CSV
+// ---------------------------------------------------------------
+function uploadCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('csv_file', file);
+  const statusEl = document.getElementById('upload-status');
+  statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split me-1"></i>Procesando…</span>';
+
+  fetch('/api/upload_csv', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        statusEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>
+          ${data.insertados} nuevos, ${data.actualizados} actualizados</span>`;
+        showToast('CSV cargado correctamente', 'success');
+        loadVehiculos();
+      } else {
+        statusEl.innerHTML = `<span class="text-danger">Error: ${data.error}</span>`;
+      }
+      input.value = '';
+    })
+    .catch(() => {
+      statusEl.innerHTML = '<span class="text-danger">Error al subir el archivo</span>';
+    });
+}
+
+// Drag & drop
+function setupDragDrop() {
+  const zone = document.getElementById('dropzone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const inp = document.getElementById('csv-input');
+      inp.files = dt.files;
+      uploadCSV(inp);
+    }
+  });
+}
+
+// ---------------------------------------------------------------
+// Search & Add vehicle
+// ---------------------------------------------------------------
+let searchTimeout;
+function searchVehiculo(q) {
+  clearTimeout(searchTimeout);
+  if (q.length < 3) { document.getElementById('search-results').innerHTML = ''; return; }
+  searchTimeout = setTimeout(async () => {
+    const res  = await fetch('/api/buscar_vehiculo?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    const container = document.getElementById('search-results');
+    if (!data.length) {
+      container.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
+      return;
+    }
+    container.innerHTML = data.map(v => {
+      const inTaller = v.fecha_entrada ? '✓ ' : '';
+      return `<button class="list-group-item list-group-item-action small py-2"
+        onclick='openEdit(${JSON.stringify(v)})'>
+        ${inTaller}<strong>${v.marca} ${v.modelo}</strong>
+        <br><code class="text-muted">${v.chasis}</code>
+        ${v.estado2 ? `<span class="badge ${estadoClass(v.estado2)} ms-1 rounded-pill">${v.estado2}</span>` : ''}
+      </button>`;
+    }).join('');
+  }, 300);
+}
+
+// ---------------------------------------------------------------
+// Edit modal
+// ---------------------------------------------------------------
+function openEdit(v) {
+  document.getElementById('m-chasis').textContent       = v.chasis;
+  document.getElementById('m-vehiculo').textContent     = `${v.marca} ${v.modelo} ${v.color}`;
+  document.getElementById('m-estado2').textContent      = v.estado2 || '—';
+  document.getElementById('m-ubicacion').textContent    = v.ubicacion || v.localizacion2 || '—';
+  document.getElementById('m-cliente').textContent      = v.cliente || '—';
+  document.getElementById('m-chasis-hidden').value      = v.chasis;
+  document.getElementById('m-taller').value             = v.taller || 'mecanica';
+  document.getElementById('m-fecha-entrada').value      = v.fecha_entrada || '';
+  document.getElementById('m-fecha-salida').value       = v.fecha_salida_est || '';
+  document.getElementById('m-problemas').value          = v.problemas || '';
+  document.getElementById('m-notas').value              = v.notas || '';
+  editModal.show();
+}
+
+async function guardarTaller() {
+  const payload = {
+    chasis:           document.getElementById('m-chasis-hidden').value,
+    taller:           document.getElementById('m-taller').value,
+    fecha_entrada:    document.getElementById('m-fecha-entrada').value,
+    fecha_salida_est: document.getElementById('m-fecha-salida').value,
+    problemas:        document.getElementById('m-problemas').value,
+    notas:            document.getElementById('m-notas').value,
+  };
+  const res  = await fetch('/api/guardar_taller', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.ok) {
+    editModal.hide();
+    showToast('Guardado correctamente', 'success');
+    document.getElementById('search-chasis').value = '';
+    document.getElementById('search-results').innerHTML = '';
+    loadVehiculos();
+  }
+}
+
+// ---------------------------------------------------------------
+// Delete from taller
+// ---------------------------------------------------------------
+function confirmarEliminar(chasis) {
+  if (!confirm(`¿Seguro que querés sacar ${chasis} del taller?\n(No se borra de la base de datos, solo del tracker de taller.)`)) return;
+  fetch('/api/eliminar_taller/' + encodeURIComponent(chasis), { method: 'DELETE' })
+    .then(r => r.json())
+    .then(d => { if (d.ok) { showToast('Vehículo removido del taller', 'warning'); loadVehiculos(); } });
+}
+
+// ---------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------
+function calcDias(entrada, salidaEst) {
+  if (!entrada) return { label: '—', cls: '' };
+  const hoy   = new Date(); hoy.setHours(0,0,0,0);
+  const start = new Date(entrada);
+  const dias  = Math.round((hoy - start) / 86400000);
+  const label = dias === 0 ? 'Hoy' : `${dias}d`;
+
+  if (!salidaEst) return { label, cls: 'days-ok' };
+  const fin  = new Date(salidaEst);
+  const diff = Math.round((fin - hoy) / 86400000);
+  if (diff < 0)  return { label: `${label} ⚠`, cls: 'days-late' };
+  if (diff <= 2) return { label, cls: 'days-warn' };
+  return { label, cls: 'days-ok' };
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function estadoClass(estado) {
+  const map = {
+    'DISPONIBLE': 'badge-disponible',
+    'VENDIDO':    'badge-vendido',
+    'RESERVADO':  'badge-reservado',
+    'EXHIBICION': 'badge-exhibicion',
+    'DEFECTUOSO': 'badge-defectuoso',
+  };
+  return map[(estado || '').toUpperCase()] || 'badge-default';
+}
+
+function escapeHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type='success') {
+  const id = 'toast-' + Date.now();
+  const colors = { success:'#198754', warning:'#fd7e14', danger:'#dc3545' };
+  const el = document.createElement('div');
+  el.id = id;
+  el.innerHTML = `<div class="toast show align-items-center text-white border-0 mb-2"
+    style="background:${colors[type]||colors.success};border-radius:10px;min-width:250px;">
+    <div class="d-flex">
+      <div class="toast-body">${msg}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+        onclick="document.getElementById('${id}').remove()"></button>
+    </div>
+  </div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { try { document.getElementById(id).remove(); } catch(e){} }, 4000);
+}
+</script>
+</body>
+</html>

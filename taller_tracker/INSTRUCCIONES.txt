@@ -1,0 +1,59 @@
+=========================================================
+  TRACKER DE TALLERES — AGE Holding
+  Instrucciones de instalación y uso
+=========================================================
+
+REQUISITOS
+----------
+- Python 3.9 o superior instalado en la PC "servidor"
+  (descargar en https://python.org si no lo tenés)
+
+INSTALACIÓN (solo la primera vez)
+-----------------------------------
+1. Abrí el símbolo del sistema (CMD) en la carpeta taller_tracker
+2. Ejecutá:
+      pip install flask
+
+INICIAR LA APP
+--------------
+1. Abrí CMD dentro de la carpeta taller_tracker
+2. Ejecutá:
+      python app.py
+3. Verás algo como:
+      http://192.168.1.X:5000
+4. Dejá esa ventana abierta (no la cerrés)
+
+ACCEDER DESDE OTRAS PCS
+------------------------
+- Desde la PC servidor:  http://localhost:5000
+- Desde cualquier otra PC en la misma red WiFi/LAN:
+      http://[IP que aparece en pantalla]:5000
+
+USO DIARIO
+----------
+1. La compañera sube el CSV:
+   - Entra a la página → panel izquierdo "Subir escaneo diario"
+   - Arrastrá el archivo CSV o hacé clic para seleccionarlo
+   - Se actualizan automáticamente Estado2 y Ubicación de TODOS los vehículos
+
+2. El encargado agrega un vehículo al taller:
+   - Panel izquierdo "Agregar vehículo a taller"
+   - Buscá por chasis, marca o modelo
+   - Hacé clic en el vehículo → se abre el formulario
+   - Completá: Taller, Fecha de entrada, Fecha estimada de salida, Problemas
+   - Guardá
+
+3. Editar datos de un vehículo en taller:
+   - En la tabla principal, clic en el ícono de lápiz ✏
+   - Modificá lo que necesitás → Guardar
+
+4. Marcar vehículo como salido del taller:
+   - Clic en el ícono ✕ de la fila
+   - Confirmar — el vehículo sale del tracker pero queda en la base de datos
+
+DATOS
+-----
+- La base de datos se guarda en: taller_tracker/taller.db
+- Hacé copias periódicas de ese archivo como respaldo
+
+=========================================================
