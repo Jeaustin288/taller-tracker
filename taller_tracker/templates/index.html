@@ -42,18 +42,6 @@
   .modal-header { background: var(--brand); color: white; }
   .modal-header .btn-close { filter: invert(1); }
 
-  /* Upload zone */
-  #dropzone {
-    border: 2px dashed #aac;
-    border-radius: 10px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    transition: background .2s;
-  }
-  #dropzone:hover, #dropzone.dragover { background: #e8f0fe; }
-  #dropzone i { font-size: 2.5rem; color: var(--brand-light); }
-
   .days-badge {
     font-size: .75rem;
     padding: 2px 8px;
@@ -139,41 +127,8 @@
 
   <div class="row g-3">
 
-    <!-- LEFT: Upload + Add -->
-    <div class="col-lg-3">
-
-      <!-- Upload CSV -->
-      <div class="card mb-3">
-        <div class="card-header bg-white fw-semibold">
-          <i class="bi bi-cloud-upload me-2 text-primary"></i>Subir escaneo diario
-        </div>
-        <div class="card-body">
-          <div id="dropzone" onclick="document.getElementById('csv-input').click()">
-            <i class="bi bi-file-earmark-spreadsheet"></i>
-            <p class="mt-2 mb-0 text-muted">Arrastrá o hacé clic<br><small>Archivo CSV del día</small></p>
-          </div>
-          <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
-          <div id="upload-status" class="mt-2 small"></div>
-        </div>
-      </div>
-
-      <!-- Add vehicle to taller -->
-      <div class="card">
-        <div class="card-header bg-white fw-semibold">
-          <i class="bi bi-plus-circle me-2 text-success"></i>Agregar vehículo a taller
-        </div>
-        <div class="card-body">
-          <input type="text" id="search-chasis" class="form-control form-control-sm mb-2"
-            placeholder="Buscar por chasis, marca o modelo…"
-            oninput="searchVehiculo(this.value)">
-          <div id="search-results" class="list-group list-group-flush" style="max-height:300px;overflow-y:auto;"></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- RIGHT: Main table -->
-    <div class="col-lg-9">
+    <!-- Main table -->
+    <div class="col-12">
       <div class="card">
         <div class="card-header bg-white d-flex align-items-center gap-3">
           <span class="fw-semibold"><i class="bi bi-table me-2 text-primary"></i>Vehículos en taller</span>
@@ -295,7 +250,6 @@ let editModal;
 document.addEventListener('DOMContentLoaded', () => {
   editModal = new bootstrap.Modal(document.getElementById('editModal'));
   loadVehiculos();
-  setupDragDrop();
 });
 
 // ---------------------------------------------------------------
@@ -413,80 +367,6 @@ function updateKPIs() {
 }
 
 // ---------------------------------------------------------------
-// Upload CSV
-// ---------------------------------------------------------------
-function uploadCSV(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const fd = new FormData();
-  fd.append('csv_file', file);
-  const statusEl = document.getElementById('upload-status');
-  statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split me-1"></i>Procesando…</span>';
-
-  fetch('/api/upload_csv', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        statusEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>
-          ${data.insertados} nuevos, ${data.actualizados} actualizados</span>`;
-        showToast('CSV cargado correctamente', 'success');
-        loadVehiculos();
-      } else {
-        statusEl.innerHTML = `<span class="text-danger">Error: ${data.error}</span>`;
-      }
-      input.value = '';
-    })
-    .catch(() => {
-      statusEl.innerHTML = '<span class="text-danger">Error al subir el archivo</span>';
-    });
-}
-
-// Drag & drop
-function setupDragDrop() {
-  const zone = document.getElementById('dropzone');
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.csv')) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      const inp = document.getElementById('csv-input');
-      inp.files = dt.files;
-      uploadCSV(inp);
-    }
-  });
-}
-
-// ---------------------------------------------------------------
-// Search & Add vehicle
-// ---------------------------------------------------------------
-let searchTimeout;
-function searchVehiculo(q) {
-  clearTimeout(searchTimeout);
-  if (q.length < 3) { document.getElementById('search-results').innerHTML = ''; return; }
-  searchTimeout = setTimeout(async () => {
-    const res  = await fetch('/api/buscar_vehiculo?q=' + encodeURIComponent(q));
-    const data = await res.json();
-    const container = document.getElementById('search-results');
-    if (!data.length) {
-      container.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
-      return;
-    }
-    container.innerHTML = data.map(v => {
-      const inTaller = v.fecha_entrada ? '✓ ' : '';
-      return `<button class="list-group-item list-group-item-action small py-2"
-        onclick='openEdit(${JSON.stringify(v)})'>
-        ${inTaller}<strong>${v.marca} ${v.modelo}</strong>
-        <br><code class="text-muted">${v.chasis}</code>
-        ${v.estado2 ? `<span class="badge ${estadoClass(v.estado2)} ms-1 rounded-pill">${v.estado2}</span>` : ''}
-      </button>`;
-    }).join('');
-  }, 300);
-}
-
-// ---------------------------------------------------------------
 // Edit modal
 // ---------------------------------------------------------------
 function openEdit(v) {
@@ -522,8 +402,6 @@ async function guardarTaller() {
   if (data.ok) {
     editModal.hide();
     showToast('Guardado correctamente', 'success');
-    document.getElementById('search-chasis').value = '';
-    document.getElementById('search-results').innerHTML = '';
     loadVehiculos();
   }
 }
@@ -596,3 +474,4 @@ function showToast(msg, type='success') {
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
