@@ -28,13 +28,14 @@ def init_db():
             FOREIGN KEY (chasis) REFERENCES vehiculos(chasis)
         );
     """)
-    # Agregar columnas nuevas si la tabla ya existe
+    conn.commit()
+    # Agregar columnas nuevas si la tabla ya existe (cada una en su propia transacción)
     for col in [("fecha_reporte", "TEXT"), ("origen_dano", "TEXT")]:
         try:
             cur.execute(f"ALTER TABLE taller_data ADD COLUMN {col[0]} {col[1]}")
+            conn.commit()
         except Exception:
-            pass
-    conn.commit()
+            conn.rollback()
     cur.close()
     conn.close()
 
@@ -147,7 +148,4 @@ def guardar_taller():
     """, (chasis, data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
           data.get("problemas"), data.get("origen_dano"), data.get("notas"),
           data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
-          data.get("problemas"), data.get("origen_dano"), data.get("notas")))
-    conn.commit()
-    cur.close()
-    c
+          data.get("problemas"), data.get("
