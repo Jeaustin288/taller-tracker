@@ -134,19 +134,43 @@ def buscar_vehiculo():
 
 @app.route("/api/guardar_taller", methods=["POST"])
 def guardar_taller():
-    data = request.json
-    chasis = (data.get("chasis") or "").strip()
-    if not chasis:
-        return jsonify({"error": "Chasis requerido"}), 400
-    conn = get_db()
-    cur = conn.cursor()
     try:
+        data = request.json or {}
+        chasis = (data.get("chasis") or "").strip()
+        if not chasis:
+            return jsonify({"ok": False, "error": "Chasis requerido"}), 400
+        conn = get_db()
+        cur = conn.cursor()
         cur.execute("""
             INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, problemas, origen_dano, notas)
             VALUES (%s,%s,%s,%s,%s,%s,%s)
             ON CONFLICT (chasis) DO UPDATE SET
                 fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, origen_dano=%s, notas=%s
-        """, (chasis, data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
-              data.get("problemas"), data.get("origen_dano"), data.get("notas"),
-              data.get("fecha_reporte"), data.get("fecha_entrada"), data.get("fecha_salida_est"),
-  
+        """, (chasis, data.get("fecha_reporte") or None, data.get("fecha_entrada") or None,
+              data.get("fecha_salida_est") or None, data.get("problemas") or None,
+              data.get("origen_dano") or None, data.get("notas") or None,
+              data.get("fecha_reporte") or None, data.get("fecha_entrada") or None,
+              data.get("fecha_salida_est") or None, data.get("problemas") or None,
+              data.get("origen_dano") or None, data.get("notas") or None))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route("/api/eliminar_taller/<chasis>", methods=["DELETE"])
+def eliminar_taller(chasis):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM taller_data WHERE chasis=%s", (chasis,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"ok": True})
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+# taller-tracker v1.0
+# taller-tracker
