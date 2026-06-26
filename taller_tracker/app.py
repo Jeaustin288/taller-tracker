@@ -4,6 +4,8 @@ import psycopg2.extras
 import csv
 import io
 import os
+import openpyxl
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -169,8 +171,7 @@ def eliminar_taller(chasis):
     conn.close()
     return jsonify({"ok": True})
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-# taller-tracker v1.0
-# taller-tracker
+@app.route("/api/upload_excel", methods=["POST"])
+def upload_excel():
+    try:
+        file = request.files.get("exce
