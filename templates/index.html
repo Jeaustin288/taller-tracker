@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Talleres — AGE Holding</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    --brand: #1a3a5c;
+    --brand-light: #2c5f9b;
+    --accent: #e8a020;
+  }
+  body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+  .navbar { background: var(--brand) !important; }
+  .navbar-brand { font-weight: 700; color: white !important; letter-spacing: 1px; }
+  .nav-link { color: rgba(255,255,255,.8) !important; }
+  .nav-link.active { color: white !important; font-weight: 600; }
+
+  .card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .card-header { border-radius: 12px 12px 0 0 !important; }
+
+  /* Status badges */
+  .badge-disponible   { background:#198754; color:#fff; }
+  .badge-vendido      { background:#0d6efd; color:#fff; }
+  .badge-reservado    { background:#fd7e14; color:#fff; }
+  .badge-exhibicion   { background:#6f42c1; color:#fff; }
+  .badge-defectuoso   { background:#dc3545; color:#fff; }
+  .badge-default      { background:#6c757d; color:#fff; }
+
+  /* Taller tag */
+  .tag-mecanica { background:#0d6efd22; color:#0d6efd; border:1px solid #0d6efd55; }
+  .tag-pintura  { background:#fd7e1422; color:#c96a00; border:1px solid #fd7e1455; }
+
+  .vehicle-row td { vertical-align: middle; font-size: .9rem; }
+  .chasis-code { font-family: monospace; font-size: .85rem; color: #555; }
+
+  .action-btn { cursor: pointer; padding: 4px 8px; border-radius: 6px; border: none; }
+
+  /* Modal */
+  .modal-header { background: var(--brand); color: white; }
+  .modal-header .btn-close { filter: invert(1); }
+
+  /* Upload zone */
+  #dropzone {
+    border: 2px dashed #aac;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  #dropzone:hover, #dropzone.dragover { background: #e8f0fe; }
+  #dropzone i { font-size: 2.5rem; color: var(--brand-light); }
+
+  .days-badge {
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .days-ok    { background:#d1e7dd; color:#0a3622; }
+  .days-warn  { background:#fff3cd; color:#664d03; }
+  .days-late  { background:#f8d7da; color:#58151c; }
+
+  .search-highlight { background: #fff3cd; }
+
+  #toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <span class="navbar-brand"><i class="bi bi-wrench-adjustable-circle me-2"></i>CONTROL TALLERES-LOGÍSTICA</span>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <span class="text-white-50 small" id="last-update-label"></span>
+      <label class="btn btn-sm btn-outline-warning mb-0" style="cursor:pointer;">
+        <i class="bi bi-cloud-upload me-1"></i>Subir CSV
+        <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
+      </label>
+
+      <button class="btn btn-sm btn-outline-light" onclick="descargarCSV()" title="Descargar tabla">
+        <i class="bi bi-download"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid py-4 px-4">
+
+  <!-- KPI Cards -->
+  <div class="card mb-4">
+    <div class="card-body p-0">
+      <div class="d-flex" style="min-height:90px;">
+
+        <!-- TOTAL EN TALLER -->
+        <div class="d-flex flex-column align-items-center justify-content-center px-4 py-3"
+             style="border-right:2px solid #e0e6ef; min-width:160px;">
+          <div class="fs-1 fw-bold text-primary" id="kpi-total">—</div>
+          <div class="fw-bold text-uppercase small" style="color:var(--brand);letter-spacing:.5px;">TOTAL EN TALLER</div>
+        </div>
+
+        <!-- MECANICA + PINTURA -->
+        <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+            <div class="fs-3 fw-bold me-3" style="color:var(--brand)" id="kpi-mecanica">—</div>
+            <div class="fw-semibold text-uppercase small" style="color:var(--brand);">TOTAL TALLER MECÁNICA</div>
+          </div>
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+            <div class="fs-3 fw-bold me-3" style="color:var(--accent)" id="kpi-pintura">—</div>
+            <div class="fw-semibold text-uppercase small" style="color:var(--accent);">TOTAL TALLER PINTURA</div>
+          </div>
+        </div>
+
+        <!-- VENCIDOS/ATRASADOS -->
+        <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+            <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-mec">—</div>
+            <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS<br><span style="color:var(--brand);font-size:.7rem;">MECÁNICA</span></div>
+          </div>
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+            <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-pin">—</div>
+            <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS<br><span style="color:var(--accent);font-size:.7rem;">PINTURA</span></div>
+          </div>
+        </div>
+
+        <!-- FINALIZADOS ESTA SEMANA -->
+        <div class="d-flex flex-column flex-grow-1">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+            <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-mec">—</div>
+            <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA<br><span style="color:var(--brand);font-size:.7rem;">MECÁNICA</span></div>
+          </div>
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+            <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-pin">—</div>
+            <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA<br><span style="color:var(--accent);font-size:.7rem;">PINTURA</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- Main table -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white d-flex align-items-center gap-3">
+          <span class="fw-semibold"><i class="bi bi-table me-2 text-primary"></i>Vehículos en taller</span>
+          <input type="text" id="search-chasis" class="form-control form-control-sm" style="max-width:220px;"
+            placeholder="Buscar por chasis…" oninput="filterTable(this.value)">
+          <div class="ms-auto d-flex gap-2">
+            <!-- Filter buttons -->
+            <button class="btn btn-sm btn-outline-secondary active" id="filter-all"
+              onclick="setFilter('all')">Todos</button>
+            <button class="btn btn-sm btn-outline-primary" id="filter-mecanica"
+              onclick="setFilter('mecanica')">TALLER MECÁNICA</button>
+            <button class="btn btn-sm btn-outline-warning" id="filter-pintura"
+              onclick="setFilter('pintura')">TALLER PINTURA</button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="main-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Chasis</th>
+                  <th>Vehículo</th>
+                  <th>F. Reporte</th>
+                  <th>Entrada</th>
+                  <th>Salida Est.</th>
+                  <th>Días</th>
+                  <th>Taller</th>
+                  <th>Estado2</th>
+                  <th>Daño Logística</th>
+                  <th>Daño Taller</th>
+                  <th>Origen de Daño</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="taller-tbody">
+                <tr><td colspan="11" class="text-center text-muted py-4">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Edit / Add taller data
+     ============================================================ -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Datos de taller</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Vehicle info (read-only) -->
+        <div class="bg-light rounded p-3 mb-3 small">
+          <div class="row">
+            <div class="col-sm-4"><strong>Chasis:</strong> <span id="m-chasis">—</span></div>
+            <div class="col-sm-4"><strong>Vehículo:</strong> <span id="m-vehiculo">—</span></div>
+            <div class="col-sm-4"><strong>Estado2:</strong> <span id="m-estado2">—</span></div>
+            <div class="col-sm-6 mt-1"><strong>Ubicación actual:</strong> <span id="m-ubicacion">—</span></div>
+            <div class="col-sm-6 mt-1"><strong>Cliente:</strong> <span id="m-cliente">—</span></div>
+          </div>
+        </div>
+
+        <input type="hidden" id="m-chasis-hidden">
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Fecha de reporte</label>
+            <input type="date" class="form-control" id="m-fecha-reporte">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Fecha de entrada</label>
+            <input type="date" class="form-control" id="m-fecha-entrada">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Fecha estimada de salida</label>
+            <input type="date" class="form-control" id="m-fecha-salida">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Daño Logística</label>
+            <textarea class="form-control" id="m-dano-logistica" rows="3"
+              placeholder="Daño de logística…"></textarea>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Daño Taller</label>
+            <textarea class="form-control" id="m-dano-taller" rows="3"
+              placeholder="Daño en taller…"></textarea>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Origen de daño</label>
+            <textarea class="form-control" id="m-origen-dano" rows="3"
+              placeholder="Origen del daño…"></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Notas adicionales</label>
+            <textarea class="form-control" id="m-notas" rows="2"
+              placeholder="Observaciones del encargado…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarTaller()">
+          <i class="bi bi-save me-1"></i>Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+// ---------------------------------------------------------------
+// State
+// ---------------------------------------------------------------
+let allVehiculos = [];
+let currentFilter = 'all';
+let editModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+  editModal = new bootstrap.Modal(document.getElementById('editModal'));
+  loadVehiculos();
+});
+
+// ---------------------------------------------------------------
+// Upload Excel (datos de taller)
+// ---------------------------------------------------------------
+function uploadExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('excel_file', file);
+  showToast('Procesando Excel…', 'warning');
+
+  fetch('/api/upload_excel', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast(`Excel importado: ${data.actualizados} actualizados, ${data.omitidos} omitidos`, 'success');
+        loadVehiculos();
+      } else {
+        showToast('Error: ' + data.error, 'danger');
+      }
+      input.value = '';
+    })
+    .catch(() => showToast('Error al subir el archivo', 'danger'));
+}
+
+// ---------------------------------------------------------------
+// Upload CSV
+// ---------------------------------------------------------------
+function uploadCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('csv_file', file);
+  showToast('Procesando CSV…', 'warning');
+
+  fetch('/api/upload_csv', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast(`CSV cargado: ${data.insertados} nuevos, ${data.actualizados} actualizados`, 'success');
+        loadVehiculos();
+      } else {
+        showToast('Error: ' + data.error, 'danger');
+      }
+      input.value = '';
+    })
+    .catch(() => showToast('Error al subir el archivo', 'danger'));
+}
+
+// ---------------------------------------------------------------
+// Load taller vehicles
+// ---------------------------------------------------------------
+async function loadVehiculos() {
+  try {
+    const res = await fetch('/api/vehiculos_taller');
+    allVehiculos = await res.json();
+    renderTable();
+    updateKPIs();
+    document.getElementById('last-update-label').textContent =
+      'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function descargarCSV() {
+  const headers = ['Chasis','Vehículo','Ubicación','Estado2','F. Reporte','Entrada','Salida Est.','Días','Daño Logística','Daño Taller','Origen de Daño','Notas'];
+  const data = currentFilter === 'all' ? allVehiculos : allVehiculos.filter(v => v.taller === currentFilter);
+  const rows = data.map(v => {
+    const dias = calcDias(v.fecha_entrada, v.fecha_salida_est);
+    return [
+      v.chasis,
+      `${v.marca} ${v.modelo} ${v.color}`,
+      v.ubicacion || '',
+      v.estado2 || '',
+      v.fecha_reporte || '',
+      v.fecha_entrada || '',
+      v.fecha_salida_est || '',
+      dias.label,
+      v.dano_logistica || '',
+      v.dano_taller || '',
+      v.origen_dano || '',
+      v.notas || ''
+    ].map(c => `"${String(c).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+  const sufijo = currentFilter === 'all' ? 'todos' : currentFilter;
+  a.download = `control_talleres_${sufijo}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function filterTable(q) {
+  const term = q.trim().toLowerCase();
+  document.querySelectorAll('#taller-tbody .vehicle-row').forEach(row => {
+    const chasis = row.querySelector('.chasis-code')?.textContent.toLowerCase() || '';
+    row.style.display = (!term || chasis.includes(term)) ? '' : 'none';
+  });
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ['all','mecanica','pintura'].forEach(id => {
+    document.getElementById('filter-'+id).classList.remove('active','btn-outline-secondary','btn-outline-primary','btn-outline-warning','btn-secondary','btn-primary','btn-warning');
+  });
+  const classes = {all:'btn-outline-secondary', mecanica:'btn-outline-primary', pintura:'btn-outline-warning'};
+  document.getElementById('filter-'+f).classList.add('active', classes[f]);
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('taller-tbody');
+  let data = allVehiculos;
+  if (currentFilter !== 'all') data = data.filter(v => v.taller === currentFilter);
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">
+      No hay vehículos en taller${currentFilter !== 'all' ? ' de '+currentFilter : ''}
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(v => {
+    const diasInfo  = calcDias(v.fecha_entrada, v.fecha_salida_est);
+    const estadoBadge = estadoClass(v.estado2);
+    const tallerTag = v.taller === 'pintura'
+      ? `<span class="badge tag-pintura rounded-pill">TALLER PINTURA</span>`
+      : `<span class="badge tag-mecanica rounded-pill">TALLER MECÁNICA</span>`;
+
+    return `<tr class="vehicle-row">
+      <td><code class="chasis-code">${v.chasis}</code></td>
+      <td>
+        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
+        <div class="text-muted small">${v.color}</div>
+      </td>
+      <td class="small">${formatDate(v.fecha_reporte)}</td>
+      <td class="small">${formatDate(v.fecha_entrada)}</td>
+      <td class="small">${formatDate(v.fecha_salida_est)}</td>
+      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
+      <td>${tallerTag}</td>
+      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
+      <td class="small">${v.dano_logistica ? escapeHtml(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
+          onclick="openEditById('${escapeHtml(v.chasis)}')">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateKPIs() {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+  const mec = allVehiculos.filter(v => v.taller === 'mecanica');
+  const pin = allVehiculos.filter(v => v.taller === 'pintura');
+
+  document.getElementById('kpi-total').textContent    = allVehiculos.length;
+  document.getElementById('kpi-mecanica').textContent = mec.length;
+  document.getElementById('kpi-pintura').textContent  = pin.length;
+
+  const vencMec = mec.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
+  const vencPin = pin.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
+  document.getElementById('kpi-vencidos-mec').textContent = vencMec;
+  document.getElementById('kpi-vencidos-pin').textContent = vencPin;
+
+  // Finalizados esta semana: fecha_salida_est dentro de la semana actual
+  const inicioSemana = new Date(hoy);
+  inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+  const finSemana = new Date(inicioSemana);
+  finSemana.setDate(inicioSemana.getDate() + 6);
+
+  const finMec = mec.filter(v => {
+    if (!v.fecha_salida_est) return false;
+    const f = new Date(v.fecha_salida_est);
+    return f >= inicioSemana && f <= finSemana;
+  }).length;
+  const finPin = pin.filter(v => {
+    if (!v.fecha_salida_est) return false;
+    const f = new Date(v.fecha_salida_est);
+    return f >= inicioSemana && f <= finSemana;
+  }).length;
+  document.getElementById('kpi-fin-mec').textContent = finMec;
+  document.getElementById('kpi-fin-pin').textContent = finPin;
+}
+
+// ---------------------------------------------------------------
+// Edit modal
+// ---------------------------------------------------------------
+function openEditById(chasis) {
+  const v = allVehiculos.find(x => x.chasis === chasis);
+  if (v) openEdit(v);
+}
+
+function openEdit(v) {
+  document.getElementById('m-chasis').textContent       = v.chasis;
+  document.getElementById('m-vehiculo').textContent     = `${v.marca} ${v.modelo} ${v.color}`;
+  document.getElementById('m-estado2').textContent      = v.estado2 || '—';
+  document.getElementById('m-ubicacion').textContent    = v.ubicacion || v.localizacion2 || '—';
+  document.getElementById('m-cliente').textContent      = v.cliente || '—';
+  document.getElementById('m-chasis-hidden').value      = v.chasis;
+  document.getElementById('m-fecha-reporte').value      = v.fecha_reporte || '';
+  document.getElementById('m-fecha-entrada').value      = v.fecha_entrada || '';
+  document.getElementById('m-fecha-salida').value       = v.fecha_salida_est || '';
+  document.getElementById('m-dano-logistica').value     = v.dano_logistica || '';
+  document.getElementById('m-dano-taller').value        = v.dano_taller || '';
+  document.getElementById('m-origen-dano').value        = v.origen_dano || '';
+  document.getElementById('m-notas').value              = v.notas || '';
+  editModal.show();
+}
+
+async function guardarTaller() {
+  try {
+    const payload = {
+      chasis:           document.getElementById('m-chasis-hidden').value,
+      fecha_reporte:    document.getElementById('m-fecha-reporte').value,
+      fecha_entrada:    document.getElementById('m-fecha-entrada').value,
+      fecha_salida_est: document.getElementById('m-fecha-salida').value,
+      dano_logistica:   document.getElementById('m-dano-logistica').value,
+      dano_taller:      document.getElementById('m-dano-taller').value,
+      origen_dano:      document.getElementById('m-origen-dano').value,
+      notas:            document.getElementById('m-notas').value,
+    };
+    const res  = await fetch('/api/guardar_taller', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      editModal.hide();
+      showToast('Guardado correctamente', 'success');
+      await loadVehiculos();
+    } else {
+      showToast('Error: ' + (data.error || 'No se pudo guardar'), 'danger');
+    }
+  } catch(e) {
+    showToast('Error de conexión: ' + e.message, 'danger');
+  }
+}
+
+// ---------------------------------------------------------------
+// Delete from taller
+// ---------------------------------------------------------------
+function confirmarEliminar(chasis) {
+  if (!confirm(`¿Seguro que querés sacar ${chasis} del taller?\n(No se borra de la base de datos, solo del tracker de taller.)`)) return;
+  fetch('/api/eliminar_taller/' + encodeURIComponent(chasis), { method: 'DELETE' })
+    .then(r => r.json())
+    .then(d => { if (d.ok) { showToast('Vehículo removido del taller', 'warning'); loadVehiculos(); } });
+}
+
+// ---------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------
+function calcDias(entrada, salidaEst) {
+  if (!entrada) return { label: '—', cls: '' };
+  const hoy   = new Date(); hoy.setHours(0,0,0,0);
+  const start = new Date(entrada);
+  const dias  = Math.round((hoy - start) / 86400000);
+  const label = dias === 0 ? 'Hoy' : `${dias}d`;
+
+  if (!salidaEst) return { label, cls: 'days-ok' };
+  const fin  = new Date(salidaEst);
+  const diff = Math.round((fin - hoy) / 86400000);
+  if (diff < 0)  return { label: `${label} ⚠`, cls: 'days-late' };
+  if (diff <= 2) return { label, cls: 'days-warn' };
+  return { label, cls: 'days-ok' };
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function estadoClass(estado) {
+  const map = {
+    'DISPONIBLE': 'badge-disponible',
+    'VENDIDO':    'badge-vendido',
+    'RESERVADO':  'badge-reservado',
+    'EXHIBICION': 'badge-exhibicion',
+    'DEFECTUOSO': 'badge-defectuoso',
+  };
+  return map[(estado || '').toUpperCase()] || 'badge-default';
+}
+
+function escapeHtml(t) {
+  return String(t).replace(/
