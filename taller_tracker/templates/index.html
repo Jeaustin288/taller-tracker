@@ -346,20 +346,23 @@ async function loadVehiculos() {
 }
 
 function descargarCSV() {
-  const headers = ['Chasis','Vehículo','Taller','Entrada','Salida Est.','Días','Estado2','Problemas'];
+  const headers = ['Chasis','Vehículo','Ubicación','Estado2','F. Reporte','Entrada','Salida Est.','Días','Daño Logística','Daño Taller','Origen de Daño','Notas'];
   const data = currentFilter === 'all' ? allVehiculos : allVehiculos.filter(v => v.taller === currentFilter);
   const rows = data.map(v => {
     const dias = calcDias(v.fecha_entrada, v.fecha_salida_est);
     return [
       v.chasis,
       `${v.marca} ${v.modelo} ${v.color}`,
-      v.taller === 'pintura' ? 'TALLER PINTURA' : 'TALLER MECÁNICA',
+      v.ubicacion || '',
+      v.estado2 || '',
+      v.fecha_reporte || '',
       v.fecha_entrada || '',
       v.fecha_salida_est || '',
       dias.label,
-      v.ubicacion || v.localizacion2 || '',
-      v.estado2 || '',
-      v.problemas || ''
+      v.dano_logistica || '',
+      v.dano_taller || '',
+      v.origen_dano || '',
+      v.notas || ''
     ].map(c => `"${String(c).replace(/"/g,'""')}"`).join(',');
   });
   const csv = [headers.join(','), ...rows].join('\n');
@@ -568,7 +571,4 @@ function estadoClass(estado) {
 }
 
 function escapeHtml(t) {
-  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-fun
+  return String(t).replace(/
