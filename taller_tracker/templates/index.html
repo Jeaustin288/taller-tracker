@@ -80,7 +80,6 @@
         <i class="bi bi-cloud-upload me-1"></i>Subir CSV
         <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
       </label>
-
       <button class="btn btn-sm btn-outline-light" onclick="window.location='/api/descargar_csv?taller='+currentFilter" title="Descargar tabla">
         <i class="bi bi-download"></i>
       </button>
@@ -282,30 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---------------------------------------------------------------
-// Upload Excel (datos de taller)
-// ---------------------------------------------------------------
-function uploadExcel(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const fd = new FormData();
-  fd.append('excel_file', file);
-  showToast('Procesando Excel…', 'warning');
-
-  fetch('/api/upload_excel', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        showToast(`Excel importado: ${data.actualizados} actualizados, ${data.omitidos} omitidos`, 'success');
-        loadVehiculos();
-      } else {
-        showToast('Error: ' + data.error, 'danger');
-      }
-      input.value = '';
-    })
-    .catch(() => showToast('Error al subir el archivo', 'danger'));
-}
-
-// ---------------------------------------------------------------
 // Upload CSV
 // ---------------------------------------------------------------
 function uploadCSV(input) {
@@ -346,23 +321,20 @@ async function loadVehiculos() {
 }
 
 function descargarCSV() {
-  const headers = ['Chasis','Vehículo','Ubicación','Estado2','F. Reporte','Entrada','Salida Est.','Días','Daño Logística','Daño Taller','Origen de Daño','Notas'];
+  const headers = ['Chasis','Vehículo','Taller','Entrada','Salida Est.','Días','Estado2','Problemas'];
   const data = currentFilter === 'all' ? allVehiculos : allVehiculos.filter(v => v.taller === currentFilter);
   const rows = data.map(v => {
     const dias = calcDias(v.fecha_entrada, v.fecha_salida_est);
     return [
       v.chasis,
       `${v.marca} ${v.modelo} ${v.color}`,
-      v.ubicacion || '',
-      v.estado2 || '',
-      v.fecha_reporte || '',
+      v.taller === 'pintura' ? 'TALLER PINTURA' : 'TALLER MECÁNICA',
       v.fecha_entrada || '',
       v.fecha_salida_est || '',
       dias.label,
-      v.dano_logistica || '',
-      v.dano_taller || '',
-      v.origen_dano || '',
-      v.notas || ''
+      v.ubicacion || v.localizacion2 || '',
+      v.estado2 || '',
+      v.problemas || ''
     ].map(c => `"${String(c).replace(/"/g,'""')}"`).join(',');
   });
   const csv = [headers.join(','), ...rows].join('\n');
@@ -570,4 +542,26 @@ function estadoClass(estado) {
   return map[(estado || '').toUpperCase()] || 'badge-default';
 }
 
-function 
+function escapeHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type='success') {
+  const id = 'toast-' + Date.now();
+  const colors = { success:'#198754', warning:'#fd7e14', danger:'#dc3545' };
+  const el = document.createElement('div');
+  el.id = id;
+  el.innerHTML = `<div class="toast show align-items-center text-white border-0 mb-2"
+    style="background:${colors[type]||colors.success};border-radius:10px;min-width:250px;">
+    <div class="d-flex">
+      <div class="toast-body">${msg}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+        onclick="document.getElementById('${id}').remove()"></button>
+    </div>
+  </div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { try { document.getElementById(id).remove(); } catch(e){} }, 4000);
+}
+</script>
+</body>
+</html>
