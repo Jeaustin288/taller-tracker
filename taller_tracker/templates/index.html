@@ -80,10 +80,7 @@
         <i class="bi bi-cloud-upload me-1"></i>Subir CSV
         <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
       </label>
-      <label class="btn btn-sm btn-outline-info mb-0" style="cursor:pointer;">
-        <i class="bi bi-file-earmark-excel me-1"></i>Importar Excel
-        <input type="file" id="excel-input" accept=".xlsx,.xls" hidden onchange="uploadExcel(this)">
-      </label>
+
       <button class="btn btn-sm btn-outline-light" onclick="descargarCSV()" title="Descargar tabla">
         <i class="bi bi-download"></i>
       </button>
@@ -564,4 +561,14 @@ function estadoClass(estado) {
     'DISPONIBLE': 'badge-disponible',
     'VENDIDO':    'badge-vendido',
     'RESERVADO':  'badge-reservado',
-    'EXHIBICION': 'badg
+    'EXHIBICION': 'badge-exhibicion',
+    'DEFECTUOSO': 'badge-defectuoso',
+  };
+  return map[(estado || '').toUpperCase()] || 'badge-default';
+}
+
+function escapeHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+fun
