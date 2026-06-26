@@ -8,7 +8,6 @@ import openpyxl
 from datetime import datetime
 
 app = Flask(__name__)
-app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 def get_db():
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
@@ -176,8 +175,3 @@ def eliminar_taller(chasis):
 def upload_excel():
     try:
         file = request.files.get("exce
-# force redeploy v2
-
-@app.route("/version")
-def version():
-    return "v3-nuevas-columnas-CSV"

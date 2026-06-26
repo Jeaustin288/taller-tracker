@@ -81,7 +81,7 @@
         <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
       </label>
 
-      <button class="btn btn-sm btn-outline-light" onclick="descargarCSV()" title="Descargar tabla">
+      <button class="btn btn-sm btn-outline-light" onclick="window.location='/api/descargar_csv?taller='+currentFilter" title="Descargar tabla">
         <i class="bi bi-download"></i>
       </button>
       <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos()">
@@ -570,5 +570,4 @@ function estadoClass(estado) {
   return map[(estado || '').toUpperCase()] || 'badge-default';
 }
 
-function escapeHtml(t) {
-  return String(t).replace(/
+function 
