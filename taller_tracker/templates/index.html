@@ -176,7 +176,8 @@
                   <th>Días</th>
                   <th>Taller</th>
                   <th>Estado2</th>
-                  <th>Problemas</th>
+                  <th>Daño Logística</th>
+                  <th>Daño Taller</th>
                   <th>Origen de Daño</th>
                   <th></th>
                 </tr>
@@ -230,15 +231,20 @@
             <label class="form-label fw-semibold">Fecha estimada de salida</label>
             <input type="date" class="form-control" id="m-fecha-salida">
           </div>
-          <div class="col-sm-6">
-            <label class="form-label fw-semibold">Problemas que presenta</label>
-            <textarea class="form-control" id="m-problemas" rows="3"
-              placeholder="Descripción de los problemas del vehículo…"></textarea>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Daño Logística</label>
+            <textarea class="form-control" id="m-dano-logistica" rows="3"
+              placeholder="Daño de logística…"></textarea>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold">Daño Taller</label>
+            <textarea class="form-control" id="m-dano-taller" rows="3"
+              placeholder="Daño en taller…"></textarea>
+          </div>
+          <div class="col-sm-4">
             <label class="form-label fw-semibold">Origen de daño</label>
             <textarea class="form-control" id="m-origen-dano" rows="3"
-              placeholder="Origen del daño del vehículo…"></textarea>
+              placeholder="Origen del daño…"></textarea>
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">Notas adicionales</label>
@@ -376,10 +382,6 @@ function renderTable() {
       ? `<span class="badge tag-pintura rounded-pill">TALLER PINTURA</span>`
       : `<span class="badge tag-mecanica rounded-pill">TALLER MECÁNICA</span>`;
 
-    const problemasTxt = v.problemas
-      ? `<span title="${escapeHtml(v.problemas)}" style="cursor:help;max-width:150px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(v.problemas)}</span>`
-      : `<span class="text-muted small">—</span>`;
-
     return `<tr class="vehicle-row">
       <td><code class="chasis-code">${v.chasis}</code></td>
       <td>
@@ -392,7 +394,8 @@ function renderTable() {
       <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
       <td>${tallerTag}</td>
       <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
-      <td>${problemasTxt}</td>
+      <td class="small">${v.dano_logistica ? escapeHtml(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
       <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
       <td>
         <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
@@ -457,7 +460,8 @@ function openEdit(v) {
   document.getElementById('m-fecha-reporte').value      = v.fecha_reporte || '';
   document.getElementById('m-fecha-entrada').value      = v.fecha_entrada || '';
   document.getElementById('m-fecha-salida').value       = v.fecha_salida_est || '';
-  document.getElementById('m-problemas').value          = v.problemas || '';
+  document.getElementById('m-dano-logistica').value     = v.dano_logistica || '';
+  document.getElementById('m-dano-taller').value        = v.dano_taller || '';
   document.getElementById('m-origen-dano').value        = v.origen_dano || '';
   document.getElementById('m-notas').value              = v.notas || '';
   editModal.show();
@@ -470,7 +474,8 @@ async function guardarTaller() {
       fecha_reporte:    document.getElementById('m-fecha-reporte').value,
       fecha_entrada:    document.getElementById('m-fecha-entrada').value,
       fecha_salida_est: document.getElementById('m-fecha-salida').value,
-      problemas:        document.getElementById('m-problemas').value,
+      dano_logistica:   document.getElementById('m-dano-logistica').value,
+      dano_taller:      document.getElementById('m-dano-taller').value,
       origen_dano:      document.getElementById('m-origen-dano').value,
       notas:            document.getElementById('m-notas').value,
     };

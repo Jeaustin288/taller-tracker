@@ -30,7 +30,7 @@ def init_db():
     """)
     conn.commit()
     # Agregar columnas nuevas si la tabla ya existe (cada una en su propia transacción)
-    for col in [("fecha_reporte", "TEXT"), ("origen_dano", "TEXT")]:
+    for col in [("fecha_reporte", "TEXT"), ("origen_dano", "TEXT"), ("dano_logistica", "TEXT"), ("dano_taller", "TEXT")]:
         try:
             cur.execute(f"ALTER TABLE taller_data ADD COLUMN {col[0]} {col[1]}")
             conn.commit()
@@ -101,7 +101,7 @@ def vehiculos_taller():
                v.estado2, v.ubicacion, v.localizacion2, v.producto, v.ultima_toma,
                CASE WHEN v.ubicacion = 'TALLER PINTURA' THEN 'pintura'
                     ELSE 'mecanica' END AS taller,
-               t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est, t.problemas, t.origen_dano, t.notas
+               t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est, t.problemas, t.origen_dano, t.dano_logistica, t.dano_taller, t.notas
         FROM vehiculos v
         LEFT JOIN taller_data t ON v.chasis = t.chasis
         WHERE v.ubicacion IN ('TALLER MECANICA', 'TALLER PINTURA')
@@ -142,16 +142,16 @@ def guardar_taller():
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, problemas, origen_dano, notas)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            INSERT INTO taller_data (chasis, fecha_reporte, fecha_entrada, fecha_salida_est, origen_dano, dano_logistica, dano_taller, notas)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
             ON CONFLICT (chasis) DO UPDATE SET
-                fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, problemas=%s, origen_dano=%s, notas=%s
+                fecha_reporte=%s, fecha_entrada=%s, fecha_salida_est=%s, origen_dano=%s, dano_logistica=%s, dano_taller=%s, notas=%s
         """, (chasis, data.get("fecha_reporte") or None, data.get("fecha_entrada") or None,
-              data.get("fecha_salida_est") or None, data.get("problemas") or None,
-              data.get("origen_dano") or None, data.get("notas") or None,
+              data.get("fecha_salida_est") or None, data.get("origen_dano") or None,
+              data.get("dano_logistica") or None, data.get("dano_taller") or None, data.get("notas") or None,
               data.get("fecha_reporte") or None, data.get("fecha_entrada") or None,
-              data.get("fecha_salida_est") or None, data.get("problemas") or None,
-              data.get("origen_dano") or None, data.get("notas") or None))
+              data.get("fecha_salida_est") or None, data.get("origen_dano") or None,
+              data.get("dano_logistica") or None, data.get("dano_taller") or None, data.get("notas") or None))
         conn.commit()
         cur.close()
         conn.close()
