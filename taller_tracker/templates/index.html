@@ -80,10 +80,10 @@
         <i class="bi bi-cloud-upload me-1"></i>Subir CSV
         <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
       </label>
-      <button class="btn btn-sm btn-outline-light" onclick="window.location='/api/descargar_csv?taller='+currentFilter" title="Descargar tabla">
+      <button class="btn btn-sm btn-outline-light" onclick="descargarCSV()" title="Descargar tabla">
         <i class="bi bi-download"></i>
       </button>
-      <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos()">
+      <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos();loadDefectuosos()">
         <i class="bi bi-arrow-clockwise"></i> Actualizar
       </button>
     </div>
@@ -129,7 +129,7 @@
         </div>
 
         <!-- FINALIZADOS ESTA SEMANA -->
-        <div class="d-flex flex-column flex-grow-1">
+        <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-mec">—</div>
             <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA<br><span style="color:var(--brand);font-size:.7rem;">MECÁNICA</span></div>
@@ -137,6 +137,18 @@
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
             <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-pin">—</div>
             <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA<br><span style="color:var(--accent);font-size:.7rem;">PINTURA</span></div>
+          </div>
+        </div>
+
+        <!-- DEFECTUOSOS / RECAMBIO -->
+        <div class="d-flex flex-column flex-grow-1">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+            <div class="fs-3 fw-bold me-3" style="color:#6f42c1;" id="kpi-defectuosos">—</div>
+            <div class="fw-semibold text-uppercase small" style="color:#6f42c1;">DEFECTUOSOS<br><span style="color:#6c757d;font-size:.7rem;">OTRAS UBIC.</span></div>
+          </div>
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+            <div class="fs-3 fw-bold me-3" style="color:#0dcaf0;" id="kpi-recambio">—</div>
+            <div class="fw-semibold text-uppercase small" style="color:#0dcaf0;">RECAMBIO<br><span style="color:#6c757d;font-size:.7rem;">OTRAS UBIC.</span></div>
           </div>
         </div>
 
@@ -192,6 +204,53 @@
     </div>
 
   </div>
+
+  <!-- Sección Defectuosos / Recambio -->
+  <div class="row g-3 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white d-flex align-items-center gap-3">
+          <span class="fw-semibold"><i class="bi bi-exclamation-triangle me-2" style="color:#6f42c1;"></i>Defectuosos / Recambio — Otras ubicaciones</span>
+          <input type="text" id="search-defect" class="form-control form-control-sm" style="max-width:220px;"
+            placeholder="Buscar por chasis…" oninput="filterTableDefect(this.value)">
+          <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary active" id="filter-defect-all"
+              onclick="setFilterDefect('all')">Todos</button>
+            <button class="btn btn-sm" style="border-color:#6f42c1;color:#6f42c1;" id="filter-defect-defectuoso"
+              onclick="setFilterDefect('DEFECTUOSO')">DEFECTUOSO</button>
+            <button class="btn btn-sm btn-outline-info" id="filter-defect-recambio"
+              onclick="setFilterDefect('RECAMBIO')">RECAMBIO</button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="defect-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Chasis</th>
+                  <th>Vehículo</th>
+                  <th>F. Reporte</th>
+                  <th>Entrada</th>
+                  <th>Salida Est.</th>
+                  <th>Días</th>
+                  <th>Ubicación</th>
+                  <th>Estado2</th>
+                  <th>Daño Logística</th>
+                  <th>Daño Taller</th>
+                  <th>Origen de Daño</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="defect-tbody">
+                <tr><td colspan="12" class="text-center text-muted py-4">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ============================================================
@@ -278,6 +337,7 @@ let editModal;
 document.addEventListener('DOMContentLoaded', () => {
   editModal = new bootstrap.Modal(document.getElementById('editModal'));
   loadVehiculos();
+  loadDefectuosos();
 });
 
 // ---------------------------------------------------------------
@@ -318,6 +378,98 @@ async function loadVehiculos() {
   } catch(e) {
     console.error(e);
   }
+}
+
+// ---------------------------------------------------------------
+// Defectuosos / Recambio section
+// ---------------------------------------------------------------
+let allDefectuosos = [];
+let currentFilterDefect = 'all';
+
+async function loadDefectuosos() {
+  try {
+    const res = await fetch('/api/vehiculos_defectuosos');
+    allDefectuosos = await res.json();
+    renderTableDefect();
+    updateKPIsDefect();
+  } catch(e) {
+    console.error('Error cargando defectuosos:', e);
+  }
+}
+
+function setFilterDefect(f) {
+  currentFilterDefect = f;
+  ['all','defectuoso','recambio'].forEach(id => {
+    const el = document.getElementById('filter-defect-' + id);
+    if (el) el.classList.remove('active');
+  });
+  const el = document.getElementById('filter-defect-' + f.toLowerCase());
+  if (el) el.classList.add('active');
+  renderTableDefect();
+}
+
+function filterTableDefect(q) {
+  const term = q.trim().toLowerCase();
+  document.querySelectorAll('#defect-tbody .vehicle-row').forEach(row => {
+    const chasis = row.querySelector('.chasis-code')?.textContent.toLowerCase() || '';
+    row.style.display = (!term || chasis.includes(term)) ? '' : 'none';
+  });
+}
+
+function renderTableDefect() {
+  const tbody = document.getElementById('defect-tbody');
+  let data = allDefectuosos;
+  if (currentFilterDefect !== 'all') {
+    data = data.filter(v => (v.estado2 || '').toUpperCase() === currentFilterDefect.toUpperCase());
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">
+      No hay vehículos${currentFilterDefect !== 'all' ? ' con estado ' + currentFilterDefect : ''}
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(v => {
+    const diasInfo = calcDias(v.fecha_entrada, v.fecha_salida_est);
+    const estadoBadge = estadoClass(v.estado2);
+    const ubicTag = `<span class="badge rounded-pill" style="background:#6c757d22;color:#495057;border:1px solid #6c757d55;font-size:.75rem;">${escapeHtml(v.ubicacion || '—')}</span>`;
+
+    return `<tr class="vehicle-row">
+      <td><code class="chasis-code">${v.chasis}</code></td>
+      <td>
+        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
+        <div class="text-muted small">${v.color}</div>
+      </td>
+      <td class="small">${formatDate(v.fecha_reporte)}</td>
+      <td class="small">${formatDate(v.fecha_entrada)}</td>
+      <td class="small">${formatDate(v.fecha_salida_est)}</td>
+      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
+      <td>${ubicTag}</td>
+      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
+      <td class="small">${v.dano_logistica ? escapeHtml(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
+          onclick="openEditByIdDefect('${escapeHtml(v.chasis)}')">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openEditByIdDefect(chasis) {
+  const v = allDefectuosos.find(x => x.chasis === chasis);
+  if (v) openEdit(v);
+}
+
+function updateKPIsDefect() {
+  const defect = allDefectuosos.filter(v => (v.estado2 || '').toUpperCase() === 'DEFECTUOSO').length;
+  const recambio = allDefectuosos.filter(v => (v.estado2 || '').toUpperCase() === 'RECAMBIO').length;
+  document.getElementById('kpi-defectuosos').textContent = defect;
+  document.getElementById('kpi-recambio').textContent = recambio;
 }
 
 function descargarCSV() {
@@ -489,6 +641,7 @@ async function guardarTaller() {
       editModal.hide();
       showToast('Guardado correctamente', 'success');
       await loadVehiculos();
+      await loadDefectuosos();
     } else {
       showToast('Error: ' + (data.error || 'No se pudo guardar'), 'danger');
     }
