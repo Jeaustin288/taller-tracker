@@ -712,4 +712,14 @@ function showToast(msg, type='success') {
   el.innerHTML = `<div class="toast show align-items-center text-white border-0 mb-2"
     style="background:${colors[type]||colors.success};border-radius:10px;min-width:250px;">
     <div class="d-flex">
-      <div class="
+      <div class="toast-body">${msg}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+        onclick="document.getElementById('${id}').remove()"></button>
+    </div>
+  </div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { try { document.getElementById(id).remove(); } catch(e){} }, 4000);
+}
+</script>
+</body>
+</html>
