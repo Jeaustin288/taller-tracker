@@ -250,29 +250,28 @@ def vehiculos_defectuosos():
     conn.close()
     return jsonify([dict(r) for r in rows])
 
-@app.route("/api/descargar_csv")
-def descargar_csv():
-    taller_filter = request.args.get("taller", "all")
+@app.route("/api/descargar_csv_defectuosos")
+def descargar_csv_defectuosos():
+    estado_filter = request.args.get("estado", "all")
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = """
+    cur.execute("""
         SELECT v.chasis, v.marca, v.modelo, v.color,
                v.estado2, v.ubicacion,
-               CASE WHEN v.ubicacion = 'TALLER PINTURA' THEN 'pintura' ELSE 'mecanica' END AS taller,
                t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est,
                t.dano_logistica, t.dano_taller, t.origen_dano, t.notas
         FROM vehiculos v
         LEFT JOIN taller_data t ON v.chasis = t.chasis
-        WHERE v.ubicacion IN ('TALLER MECANICA', 'TALLER PINTURA')
-        ORDER BY v.ubicacion, v.estado2, v.chasis
-    """
-    cur.execute(query)
+        WHERE v.estado2 IN ('DEFECTUOSO', 'RECAMBIO')
+          AND v.ubicacion NOT IN ('TALLER MECANICA', 'TALLER PINTURA')
+        ORDER BY v.estado2, v.ubicacion, v.chasis
+    """)
     rows = cur.fetchall()
     cur.close()
     conn.close()
 
-    if taller_filter != "all":
-        rows = [r for r in rows if r["taller"] == taller_filter]
+    if estado_filter != "all":
+        rows = [r for r in rows if (r["estado2"] or "").upper() == estado_filter.upper()]
 
     def calc_dias(entrada, salida):
         if not entrada:
@@ -291,32 +290,24 @@ def descargar_csv():
         vehiculo = f"{r['marca'] or ''} {r['modelo'] or ''} {r['color'] or ''}".strip()
         dias = calc_dias(r["fecha_entrada"], r["fecha_salida_est"])
         row = [
-            r["chasis"] or "",
-            vehiculo,
-            r["ubicacion"] or "",
-            r["estado2"] or "",
-            r["fecha_reporte"] or "",
-            r["fecha_entrada"] or "",
-            r["fecha_salida_est"] or "",
-            dias,
-            r["dano_logistica"] or "",
-            r["dano_taller"] or "",
-            r["origen_dano"] or "",
-            r["notas"] or "",
+            r["chasis"] or "", vehiculo, r["ubicacion"] or "", r["estado2"] or "",
+            r["fecha_reporte"] or "", r["fecha_entrada"] or "", r["fecha_salida_est"] or "", dias,
+            r["dano_logistica"] or "", r["dano_taller"] or "", r["origen_dano"] or "", r["notas"] or "",
         ]
         lines.append(",".join(f'"{str(c).replace(chr(34), chr(34)+chr(34))}"' for c in row))
 
     csv_content = "﻿" + "\n".join(lines)
     from flask import Response
-    sufijo = taller_filter if taller_filter != "all" else "todos"
-    filename = f"control_talleres_{sufijo}.csv"
-    return Response(
-        csv_content,
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+    sufijo = estado_filter.lower() if estado_filter != "all" else "todos"
+    return Response(csv_content, mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=defectuosos_{sufijo}.csv"})
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-# taller-tracker v3
+@app.route("/api/descargar_csv")
+def descargar_csv():
+    taller_filter = request.args.get("taller", "all")
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    query = """
+        SELECT v.chasis, v.marca, v.modelo, v.color,
+               v.estado2, v.ubicacion,
+        

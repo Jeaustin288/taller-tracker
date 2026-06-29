@@ -214,6 +214,11 @@
           <input type="text" id="search-defect" class="form-control form-control-sm" style="max-width:220px;"
             placeholder="Buscar por chasis…" oninput="filterTableDefect(this.value)">
           <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-sm btn-outline-light" style="background:#6f42c1;border-color:#6f42c1;"
+              onclick="window.location='/api/descargar_csv_defectuosos?estado='+currentFilterDefect"
+              title="Descargar tabla defectuosos">
+              <i class="bi bi-download"></i>
+            </button>
             <button class="btn btn-sm btn-outline-secondary active" id="filter-defect-all"
               onclick="setFilterDefect('all')">Todos</button>
             <button class="btn btn-sm" style="border-color:#6f42c1;color:#6f42c1;" id="filter-defect-defectuoso"
@@ -708,13 +713,4 @@ function showToast(msg, type='success') {
     style="background:${colors[type]||colors.success};border-radius:10px;min-width:250px;">
     <div class="d-flex">
       <div class="toast-body">${msg}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto"
-        onclick="document.getElementById('${id}').remove()"></button>
-    </div>
-  </div>`;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => { try { document.getElementById(id).remove(); } catch(e){} }, 4000);
-}
-</script>
-</body>
-</html>
+      <button type=
