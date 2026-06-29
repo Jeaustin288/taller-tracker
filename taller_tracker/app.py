@@ -310,4 +310,65 @@ def descargar_csv():
     query = """
         SELECT v.chasis, v.marca, v.modelo, v.color,
                v.estado2, v.ubicacion,
-        
+               CASE WHEN v.ubicacion = 'TALLER PINTURA' THEN 'pintura' ELSE 'mecanica' END AS taller,
+               t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est,
+               t.dano_logistica, t.dano_taller, t.origen_dano, t.notas
+        FROM vehiculos v
+        LEFT JOIN taller_data t ON v.chasis = t.chasis
+        WHERE v.ubicacion IN ('TALLER MECANICA', 'TALLER PINTURA')
+        ORDER BY v.ubicacion, v.estado2, v.chasis
+    """
+    cur.execute(query)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if taller_filter != "all":
+        rows = [r for r in rows if r["taller"] == taller_filter]
+
+    def calc_dias(entrada, salida):
+        if not entrada:
+            return ""
+        try:
+            from datetime import date
+            d1 = date.fromisoformat(str(entrada)[:10])
+            d2 = date.fromisoformat(str(salida)[:10]) if salida and str(salida)[:10] > "2000-01-01" else date.today()
+            return f"{(d2 - d1).days}d"
+        except:
+            return ""
+
+    headers = ["Chasis","Vehículo","Ubicación","Estado2","F. Reporte","Entrada","Salida Est.","Días","Daño Logística","Daño Taller","Origen de Daño","Notas"]
+    lines = [",".join(f'"{h}"' for h in headers)]
+    for r in rows:
+        vehiculo = f"{r['marca'] or ''} {r['modelo'] or ''} {r['color'] or ''}".strip()
+        dias = calc_dias(r["fecha_entrada"], r["fecha_salida_est"])
+        row = [
+            r["chasis"] or "",
+            vehiculo,
+            r["ubicacion"] or "",
+            r["estado2"] or "",
+            r["fecha_reporte"] or "",
+            r["fecha_entrada"] or "",
+            r["fecha_salida_est"] or "",
+            dias,
+            r["dano_logistica"] or "",
+            r["dano_taller"] or "",
+            r["origen_dano"] or "",
+            r["notas"] or "",
+        ]
+        lines.append(",".join(f'"{str(c).replace(chr(34), chr(34)+chr(34))}"' for c in row))
+
+    csv_content = "\ufeff" + "\n".join(lines)
+    from flask import Response
+    sufijo = taller_filter if taller_filter != "all" else "todos"
+    filename = f"control_talleres_{sufijo}.csv"
+    return Response(
+        csv_content,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+# taller-tracker v3
