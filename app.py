@@ -54,45 +54,42 @@ def upload_csv():
         return jsonify({"error": "No se recibió archivo"}), 400
     content = file.read().decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(content))
-    conn = get_db()
-    cur = conn.cursor()
-    updated = 0
-    inserted = 0
+    params = []
     for row in reader:
         chasis = (row.get("# Chasis") or "").strip()
         if not chasis:
             continue
-        estado2       = (row.get("Estado2") or "").strip()
-        ubicacion     = (row.get("Toma Fisica Inventarios - UBICACION") or "").strip()
-        localizacion2 = (row.get("LOCALIZACION2") or "").strip()
-        marca         = (row.get("Marca") or "").strip()
-        modelo        = (row.get("Modelo") or "").strip()
-        color         = (row.get("Color") or "").strip()
-        cliente       = (row.get("Calc-Cliente") or "").strip()
-        producto      = (row.get("Nombre del producto") or "").strip()
-        ultima_toma   = (row.get("Toma Fisica Inventario - Fecha Ultima Toma") or "").strip()
-        cur.execute("""
-            INSERT INTO vehiculos
-                (chasis, marca, modelo, color, cliente, estado2,
-                 ubicacion, localizacion2, producto, ultima_toma)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (chasis) DO UPDATE SET
-                estado2=%s, ubicacion=%s, localizacion2=%s,
-                marca=%s, modelo=%s, color=%s, cliente=%s,
-                producto=%s, ultima_toma=%s
-        """, (chasis, marca, modelo, color, cliente, estado2,
-              ubicacion, localizacion2, producto, ultima_toma,
-              estado2, ubicacion, localizacion2,
-              marca, modelo, color, cliente,
-              producto, ultima_toma))
-        if cur.rowcount == 1:
-            inserted += 1
-        else:
-            updated += 1
+        params.append((
+            chasis,
+            (row.get("Marca") or "").strip(),
+            (row.get("Modelo") or "").strip(),
+            (row.get("Color") or "").strip(),
+            (row.get("Calc-Cliente") or "").strip(),
+            (row.get("Estado2") or "").strip(),
+            (row.get("Toma Fisica Inventarios - UBICACION") or "").strip(),
+            (row.get("LOCALIZACION2") or "").strip(),
+            (row.get("Nombre del producto") or "").strip(),
+            (row.get("Toma Fisica Inventario - Fecha Ultima Toma") or "").strip(),
+        ))
+    if not params:
+        return jsonify({"ok": True, "insertados": 0, "actualizados": 0})
+    conn = get_db()
+    cur = conn.cursor()
+    psycopg2.extras.execute_batch(cur, """
+        INSERT INTO vehiculos
+            (chasis, marca, modelo, color, cliente, estado2,
+             ubicacion, localizacion2, producto, ultima_toma)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        ON CONFLICT (chasis) DO UPDATE SET
+            marca=%s, modelo=%s, color=%s, cliente=%s,
+            estado2=%s, ubicacion=%s, localizacion2=%s,
+            producto=%s, ultima_toma=%s
+    """, [(p + p[1:]) for p in params], page_size=200)
+    total = len(params)
     conn.commit()
     cur.close()
     conn.close()
-    return jsonify({"ok": True, "insertados": inserted, "actualizados": updated})
+    return jsonify({"ok": True, "insertados": total, "actualizados": 0})
 
 @app.route("/api/vehiculos_taller")
 def vehiculos_taller():
