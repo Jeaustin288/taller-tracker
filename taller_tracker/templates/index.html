@@ -66,6 +66,21 @@
   .search-highlight { background: #fff3cd; }
 
   #toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; }
+
+  .nota-dot {
+    position: relative;
+  }
+  .nota-dot::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 7px;
+    height: 7px;
+    background: #212529;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+  }
 </style>
 </head>
 <body>
@@ -456,7 +471,7 @@ function renderTableDefect() {
       <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
       <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
       <td>
-        <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
+        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}" title="${v.notas ? 'Editar (tiene nota)' : 'Editar'}"
           onclick="openEditByIdDefect('${escapeHtml(v.chasis)}')">
           <i class="bi bi-pencil"></i>
         </button>
@@ -555,7 +570,7 @@ function renderTable() {
       <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
       <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
       <td>
-        <button class="action-btn btn btn-sm btn-outline-primary" title="Editar"
+        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}" title="${v.notas ? 'Editar (tiene nota)' : 'Editar'}"
           onclick="openEditById('${escapeHtml(v.chasis)}')">
           <i class="bi bi-pencil"></i>
         </button>
