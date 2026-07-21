@@ -363,25 +363,29 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---------------------------------------------------------------
 // Upload CSV
 // ---------------------------------------------------------------
-function uploadCSV(input) {
+async function uploadCSV(input) {
   const file = input.files[0];
   if (!file) return;
+  showToast('Conectando…', 'warning');
+  // Despertar el servidor antes de subir
+  try { await fetch('/api/vehiculos_taller'); } catch(e) {}
   const fd = new FormData();
   fd.append('csv_file', file);
   showToast('Procesando CSV…', 'warning');
-
-  fetch('/api/upload_csv', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        showToast(`CSV cargado: ${data.insertados} nuevos, ${data.actualizados} actualizados`, 'success');
-        loadVehiculos();
-      } else {
-        showToast('Error: ' + data.error, 'danger');
-      }
-      input.value = '';
-    })
-    .catch(() => showToast('Error al subir el archivo', 'danger'));
+  try {
+    const r = await fetch('/api/upload_csv', { method: 'POST', body: fd });
+    const data = await r.json();
+    if (data.ok) {
+      showToast(`CSV cargado: ${data.insertados} registros procesados`, 'success');
+      loadVehiculos();
+      loadDefectuosos();
+    } else {
+      showToast('Error: ' + (data.error || 'No se pudo subir'), 'danger');
+    }
+  } catch(e) {
+    showToast('Error de conexión. Intentá de nuevo.', 'danger');
+  }
+  input.value = '';
 }
 
 // ---------------------------------------------------------------
