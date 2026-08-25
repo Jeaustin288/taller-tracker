@@ -31,6 +31,14 @@ def init_db():
         );
     """)
     conn.commit()
+    # Migraciones vehiculos (columnas que pueden no existir en DB antigua)
+    for col in [("produto","TEXT"),("ultima_toma","TEXT"),("localizacion2","TEXT")]:
+        try:
+            cur.execute(f"ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS {col[0]} {col[1]}")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+    # Migraciones taller_data
     for col in [
         ("fecha_reporte","TEXT"),("origen_dano","TEXT"),
         ("dano_logistica","TEXT"),("dano_taller","TEXT"),
@@ -38,7 +46,7 @@ def init_db():
         ("fecha_salida_real","TEXT"),
     ]:
         try:
-            cur.execute(f"ALTER TABLE taller_data ADD COLUMN {col[0]} {col[1]}")
+            cur.execute(f"ALTER TABLE taller_data ADD COLUMN IF NOT EXISTS {col[0]} {col[1]}")
             conn.commit()
         except Exception:
             conn.rollback()
