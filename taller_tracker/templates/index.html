@@ -7,85 +7,75 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <style>
-  :root {
-    --brand: #1a3a5c;
-    --brand-light: #2c5f9b;
-    --accent: #e8a020;
-  }
-  body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-  .navbar { background: var(--brand) !important; }
-  .navbar-brand { font-weight: 700; color: white !important; letter-spacing: 1px; }
-  .nav-link { color: rgba(255,255,255,.8) !important; }
-  .nav-link.active { color: white !important; font-weight: 600; }
-
-  .card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-  .card-header { border-radius: 12px 12px 0 0 !important; }
+  :root { --brand:#1a3a5c; --brand-light:#2c5f9b; --accent:#e8a020; }
+  body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
+  .navbar { background:var(--brand) !important; }
+  .navbar-brand { font-weight:700; color:white !important; letter-spacing:1px; }
+  .card { border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .card-header { border-radius:12px 12px 0 0 !important; }
 
   /* Status badges */
-  .badge-disponible   { background:#198754; color:#fff; }
-  .badge-vendido      { background:#0d6efd; color:#fff; }
-  .badge-reservado    { background:#fd7e14; color:#fff; }
-  .badge-exhibicion   { background:#6f42c1; color:#fff; }
-  .badge-defectuoso   { background:#dc3545; color:#fff; }
-  .badge-default      { background:#6c757d; color:#fff; }
+  .badge-disponible { background:#198754; color:#fff; }
+  .badge-vendido    { background:#0d6efd; color:#fff; }
+  .badge-reservado  { background:#fd7e14; color:#fff; }
+  .badge-exhibicion { background:#6f42c1; color:#fff; }
+  .badge-defectuoso { background:#dc3545; color:#fff; }
+  .badge-default    { background:#6c757d; color:#fff; }
 
   /* Taller tag */
   .tag-mecanica { background:#0d6efd22; color:#0d6efd; border:1px solid #0d6efd55; }
   .tag-pintura  { background:#fd7e1422; color:#c96a00; border:1px solid #fd7e1455; }
 
-  .vehicle-row td { vertical-align: middle; font-size: .9rem; }
-  .chasis-code { font-family: monospace; font-size: .85rem; color: #555; }
-
-  .action-btn { cursor: pointer; padding: 4px 8px; border-radius: 6px; border: none; }
+  /* Table spacing */
+  .vehicle-row td { vertical-align:middle; font-size:.88rem; padding:10px 10px; }
+  thead th { font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; padding:10px 10px; white-space:nowrap; }
+  .chasis-code { font-family:monospace; font-size:.82rem; color:#555; }
+  .action-btn { cursor:pointer; padding:4px 8px; border-radius:6px; border:none; }
 
   /* Modal */
-  .modal-header { background: var(--brand); color: white; }
-  .modal-header .btn-close { filter: invert(1); }
+  .modal-header { background:var(--brand); color:white; }
+  .modal-header .btn-close { filter:invert(1); }
 
-  /* Upload zone */
-  #dropzone {
-    border: 2px dashed #aac;
-    border-radius: 10px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    transition: background .2s;
-  }
-  #dropzone:hover, #dropzone.dragover { background: #e8f0fe; }
-  #dropzone i { font-size: 2.5rem; color: var(--brand-light); }
-
-  .days-badge {
-    font-size: .75rem;
-    padding: 2px 8px;
-    border-radius: 20px;
-  }
+  .days-badge { font-size:.75rem; padding:3px 9px; border-radius:20px; white-space:nowrap; }
   .days-ok    { background:#d1e7dd; color:#0a3622; }
   .days-warn  { background:#fff3cd; color:#664d03; }
   .days-late  { background:#f8d7da; color:#58151c; }
-
-  .search-highlight { background: #fff3cd; }
+  .days-green { background:#198754; color:#fff; }
 
   #toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; }
 
-  .nota-dot {
-    position: relative;
-  }
+  .nota-dot { position:relative; }
   .nota-dot::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 7px;
-    height: 7px;
-    background: #212529;
-    border-radius: 50%;
-    border: 1.5px solid #fff;
+    content:''; position:absolute; top:3px; right:3px;
+    width:7px; height:7px; background:#212529; border-radius:50%; border:1.5px solid #fff;
+  }
+
+  /* Stamp buttons (L / T confirmaciones de entrada) */
+  .stamp-btn {
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:.7rem; padding:2px 6px; border-radius:4px;
+    border:1px solid #ccc; background:#f8f9fa; color:#555; cursor:pointer;
+    white-space:nowrap; transition:background .15s;
+  }
+  .stamp-btn.stamped { background:#d1e7dd; border-color:#a3cfbb; color:#0a3622; font-weight:600; }
+  .stamp-btn:hover:not(.stamped) { background:#e9ecef; }
+
+  /* Pendiente / Entregado badge */
+  .badge-pendiente {
+    display:inline-block; font-size:.7rem; padding:3px 8px; border-radius:4px;
+    background:#fff3cd; color:#664d03; border:1px solid #ffc10766; cursor:pointer;
+    white-space:nowrap; transition:background .15s;
+  }
+  .badge-pendiente:hover { background:#ffe08a; }
+  .badge-entregado {
+    display:inline-block; font-size:.7rem; padding:3px 8px; border-radius:4px;
+    background:#d1e7dd; color:#0a3622; border:1px solid #a3cfbb; cursor:pointer;
+    white-space:nowrap;
   }
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
     <span class="navbar-brand"><i class="bi bi-wrench-adjustable-circle me-2"></i>CONTROL TALLERES-LOGÍSTICA</span>
@@ -95,7 +85,7 @@
         <i class="bi bi-cloud-upload me-1"></i>Subir CSV
         <input type="file" id="csv-input" accept=".csv" hidden onchange="uploadCSV(this)">
       </label>
-      <button class="btn btn-sm btn-outline-light" onclick="window.location='/api/descargar_csv?taller='+currentFilter" title="Descargar tabla">
+      <button class="btn btn-sm btn-outline-light" onclick="window.location='/api/descargar_csv?taller='+currentFilter" title="Descargar">
         <i class="bi bi-download"></i>
       </button>
       <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos();loadDefectuosos()">
@@ -111,15 +101,10 @@
   <div class="card mb-4">
     <div class="card-body p-0">
       <div class="d-flex" style="min-height:90px;">
-
-        <!-- TOTAL EN TALLER -->
-        <div class="d-flex flex-column align-items-center justify-content-center px-4 py-3"
-             style="border-right:2px solid #e0e6ef; min-width:160px;">
+        <div class="d-flex flex-column align-items-center justify-content-center px-4 py-3" style="border-right:2px solid #e0e6ef;min-width:160px;">
           <div class="fs-1 fw-bold text-primary" id="kpi-total">—</div>
           <div class="fw-bold text-uppercase small" style="color:var(--brand);letter-spacing:.5px;">TOTAL EN TALLER</div>
         </div>
-
-        <!-- MECANICA + PINTURA -->
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3" style="color:var(--brand)" id="kpi-mecanica">—</div>
@@ -130,8 +115,6 @@
             <div class="fw-semibold text-uppercase small" style="color:var(--accent);">TOTAL TALLER PINTURA</div>
           </div>
         </div>
-
-        <!-- VENCIDOS/ATRASADOS -->
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-mec">—</div>
@@ -142,8 +125,6 @@
             <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS<br><span style="color:var(--accent);font-size:.7rem;">PINTURA</span></div>
           </div>
         </div>
-
-        <!-- FINALIZADOS ESTA SEMANA -->
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-mec">—</div>
@@ -154,8 +135,6 @@
             <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA<br><span style="color:var(--accent);font-size:.7rem;">PINTURA</span></div>
           </div>
         </div>
-
-        <!-- DEFECTUOSOS / RECAMBIO -->
         <div class="d-flex flex-column flex-grow-1">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3" style="color:#6f42c1;" id="kpi-defectuosos">—</div>
@@ -166,14 +145,12 @@
             <div class="fw-semibold text-uppercase small" style="color:#0dcaf0;">RECAMBIO<br><span style="color:#6c757d;font-size:.7rem;">OTRAS UBIC.</span></div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
+  <!-- Main table -->
   <div class="row g-3">
-
-    <!-- Main table -->
     <div class="col-12">
       <div class="card">
         <div class="card-header bg-white d-flex align-items-center gap-3">
@@ -181,13 +158,9 @@
           <input type="text" id="search-chasis" class="form-control form-control-sm" style="max-width:220px;"
             placeholder="Buscar por chasis…" oninput="filterTable(this.value)">
           <div class="ms-auto d-flex gap-2">
-            <!-- Filter buttons -->
-            <button class="btn btn-sm btn-outline-secondary active" id="filter-all"
-              onclick="setFilter('all')">Todos</button>
-            <button class="btn btn-sm btn-outline-primary" id="filter-mecanica"
-              onclick="setFilter('mecanica')">TALLER MECÁNICA</button>
-            <button class="btn btn-sm btn-outline-warning" id="filter-pintura"
-              onclick="setFilter('pintura')">TALLER PINTURA</button>
+            <button class="btn btn-sm btn-outline-secondary active" id="filter-all" onclick="setFilter('all')">Todos</button>
+            <button class="btn btn-sm btn-outline-primary" id="filter-mecanica" onclick="setFilter('mecanica')">TALLER MECÁNICA</button>
+            <button class="btn btn-sm btn-outline-warning" id="filter-pintura" onclick="setFilter('pintura')">TALLER PINTURA</button>
           </div>
         </div>
         <div class="card-body p-0">
@@ -197,15 +170,14 @@
                 <tr>
                   <th>Chasis</th>
                   <th>Vehículo</th>
-                  <th>F. Reporte</th>
-                  <th>Entrada</th>
-                  <th>Salida Est.</th>
-                  <th>Días</th>
-                  <th>Taller</th>
-                  <th>Estado2</th>
+                  <th>Fecha Reporte</th>
+                  <th>Entrada Taller</th>
+                  <th>Salida Estimada</th>
+                  <th>Días para entrega</th>
+                  <th>Ubicación</th>
+                  <th>Estado</th>
                   <th>Daño Logística</th>
                   <th>Daño Taller</th>
-                  <th>Origen de Daño</th>
                   <th></th>
                 </tr>
               </thead>
@@ -217,10 +189,9 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Sección Defectuosos / Recambio -->
+  <!-- Defectuosos / Recambio -->
   <div class="row g-3 mt-1">
     <div class="col-12">
       <div class="card">
@@ -230,16 +201,12 @@
             placeholder="Buscar por chasis…" oninput="filterTableDefect(this.value)">
           <div class="ms-auto d-flex gap-2">
             <button class="btn btn-sm btn-outline-light" style="background:#6f42c1;border-color:#6f42c1;"
-              onclick="window.location='/api/descargar_csv_defectuosos?estado='+currentFilterDefect"
-              title="Descargar tabla defectuosos">
+              onclick="window.location='/api/descargar_csv_defectuosos?estado='+currentFilterDefect" title="Descargar">
               <i class="bi bi-download"></i>
             </button>
-            <button class="btn btn-sm btn-outline-secondary active" id="filter-defect-all"
-              onclick="setFilterDefect('all')">Todos</button>
-            <button class="btn btn-sm" style="border-color:#6f42c1;color:#6f42c1;" id="filter-defect-defectuoso"
-              onclick="setFilterDefect('DEFECTUOSO')">DEFECTUOSO</button>
-            <button class="btn btn-sm btn-outline-info" id="filter-defect-recambio"
-              onclick="setFilterDefect('RECAMBIO')">RECAMBIO</button>
+            <button class="btn btn-sm btn-outline-secondary active" id="filter-defect-all" onclick="setFilterDefect('all')">Todos</button>
+            <button class="btn btn-sm" style="border-color:#6f42c1;color:#6f42c1;" id="filter-defect-defectuoso" onclick="setFilterDefect('DEFECTUOSO')">DEFECTUOSO</button>
+            <button class="btn btn-sm btn-outline-info" id="filter-defect-recambio" onclick="setFilterDefect('RECAMBIO')">RECAMBIO</button>
           </div>
         </div>
         <div class="card-body p-0">
@@ -247,22 +214,13 @@
             <table class="table table-hover mb-0" id="defect-table">
               <thead class="table-light">
                 <tr>
-                  <th>Chasis</th>
-                  <th>Vehículo</th>
-                  <th>F. Reporte</th>
-                  <th>Entrada</th>
-                  <th>Salida Est.</th>
-                  <th>Días</th>
-                  <th>Ubicación</th>
-                  <th>Estado2</th>
-                  <th>Daño Logística</th>
-                  <th>Daño Taller</th>
-                  <th>Origen de Daño</th>
-                  <th></th>
+                  <th>Chasis</th><th>Vehículo</th><th>Fecha Reporte</th><th>Entrada</th>
+                  <th>Salida Est.</th><th>Días</th><th>Ubicación</th><th>Estado</th>
+                  <th>Daño Logística</th><th>Daño Taller</th><th></th>
                 </tr>
               </thead>
               <tbody id="defect-tbody">
-                <tr><td colspan="12" class="text-center text-muted py-4">Cargando…</td></tr>
+                <tr><td colspan="11" class="text-center text-muted py-4">Cargando…</td></tr>
               </tbody>
             </table>
           </div>
@@ -270,12 +228,9 @@
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- ============================================================
-     MODAL: Edit / Add taller data
-     ============================================================ -->
+<!-- MODAL -->
 <div class="modal fade" id="editModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -284,51 +239,59 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-
-        <!-- Vehicle info (read-only) -->
         <div class="bg-light rounded p-3 mb-3 small">
           <div class="row">
             <div class="col-sm-4"><strong>Chasis:</strong> <span id="m-chasis">—</span></div>
             <div class="col-sm-4"><strong>Vehículo:</strong> <span id="m-vehiculo">—</span></div>
-            <div class="col-sm-4"><strong>Estado2:</strong> <span id="m-estado2">—</span></div>
-            <div class="col-sm-6 mt-1"><strong>Ubicación actual:</strong> <span id="m-ubicacion">—</span></div>
+            <div class="col-sm-4"><strong>Estado:</strong> <span id="m-estado2">—</span></div>
+            <div class="col-sm-6 mt-1"><strong>Ubicación:</strong> <span id="m-ubicacion">—</span></div>
             <div class="col-sm-6 mt-1"><strong>Cliente:</strong> <span id="m-cliente">—</span></div>
           </div>
         </div>
-
         <input type="hidden" id="m-chasis-hidden">
         <div class="row g-3">
           <div class="col-sm-4">
-            <label class="form-label fw-semibold">Fecha de reporte</label>
+            <label class="form-label fw-semibold">Fecha Reporte</label>
             <input type="date" class="form-control" id="m-fecha-reporte">
           </div>
           <div class="col-sm-4">
-            <label class="form-label fw-semibold">Fecha de entrada</label>
+            <label class="form-label fw-semibold">Entrada Taller</label>
             <input type="date" class="form-control" id="m-fecha-entrada">
           </div>
           <div class="col-sm-4">
-            <label class="form-label fw-semibold">Fecha estimada de salida</label>
+            <label class="form-label fw-semibold">Salida Estimada</label>
             <input type="date" class="form-control" id="m-fecha-salida">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-primary"><i class="bi bi-truck me-1"></i>Fecha entrega Logística</label>
+            <input type="date" class="form-control" id="m-fecha-entrega-log">
+            <small class="text-muted">Logística confirma que entregó el vehículo</small>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-success"><i class="bi bi-wrench me-1"></i>Fecha recibido Taller</label>
+            <input type="date" class="form-control" id="m-fecha-recibido-taller">
+            <small class="text-muted">Taller confirma que recibió el vehículo</small>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-semibold text-success"><i class="bi bi-check-circle me-1"></i>Fecha salida real</label>
+            <input type="date" class="form-control" id="m-fecha-salida-real">
+            <small class="text-muted">Cuando taller entrega antes de lo estimado</small>
           </div>
           <div class="col-sm-4">
             <label class="form-label fw-semibold">Daño Logística</label>
-            <textarea class="form-control" id="m-dano-logistica" rows="3"
-              placeholder="Daño de logística…"></textarea>
+            <textarea class="form-control" id="m-dano-logistica" rows="2" placeholder="Daño de logística…"></textarea>
           </div>
           <div class="col-sm-4">
             <label class="form-label fw-semibold">Daño Taller</label>
-            <textarea class="form-control" id="m-dano-taller" rows="3"
-              placeholder="Daño en taller…"></textarea>
+            <textarea class="form-control" id="m-dano-taller" rows="2" placeholder="Daño en taller…"></textarea>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-6">
             <label class="form-label fw-semibold">Origen de daño</label>
-            <textarea class="form-control" id="m-origen-dano" rows="3"
-              placeholder="Origen del daño…"></textarea>
+            <textarea class="form-control" id="m-origen-dano" rows="2" placeholder="Origen del daño…"></textarea>
           </div>
-          <div class="col-12">
+          <div class="col-sm-6">
             <label class="form-label fw-semibold">Notas adicionales</label>
-            <textarea class="form-control" id="m-notas" rows="2"
-              placeholder="Observaciones del encargado…"></textarea>
+            <textarea class="form-control" id="m-notas" rows="2" placeholder="Observaciones…"></textarea>
           </div>
         </div>
       </div>
@@ -342,16 +305,13 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast-container"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
-// ---------------------------------------------------------------
-// State
-// ---------------------------------------------------------------
 let allVehiculos = [];
+let allDefectuosos = [];
 let currentFilter = 'all';
+let currentFilterDefect = 'all';
 let editModal;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -360,55 +320,45 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDefectuosos();
 });
 
-// ---------------------------------------------------------------
-// Upload CSV
-// ---------------------------------------------------------------
+// ---- Upload CSV ----
 async function uploadCSV(input) {
   const file = input.files[0];
   if (!file) return;
-  showToast('Conectando…', 'warning');
-  // Despertar el servidor antes de subir
-  try { await fetch('/api/vehiculos_taller'); } catch(e) {}
+  showToast('Conectando con el servidor…', 'warning');
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 60000);
+    await fetch('/api/ping', { signal: ctrl.signal });
+    clearTimeout(tid);
+  } catch(e) {}
   const fd = new FormData();
   fd.append('csv_file', file);
   showToast('Procesando CSV…', 'warning');
   try {
-    const r = await fetch('/api/upload_csv', { method: 'POST', body: fd });
+    const r = await fetch('/api/upload_csv', { method:'POST', body:fd });
     const data = await r.json();
     if (data.ok) {
-      showToast(`CSV cargado: ${data.insertados} registros procesados`, 'success');
-      loadVehiculos();
-      loadDefectuosos();
+      showToast(`✓ CSV cargado: ${data.insertados} registros actualizados`, 'success');
+      loadVehiculos(); loadDefectuosos();
     } else {
-      showToast('Error: ' + (data.error || 'No se pudo subir'), 'danger');
+      showToast('Error al subir: ' + (data.error || 'No se pudo procesar'), 'danger');
     }
   } catch(e) {
-    showToast('Error de conexión. Intentá de nuevo.', 'danger');
+    showToast('Error de conexión (' + e.message + '). Intentá de nuevo.', 'danger');
   }
   input.value = '';
 }
 
-// ---------------------------------------------------------------
-// Load taller vehicles
-// ---------------------------------------------------------------
+// ---- Load data ----
 async function loadVehiculos() {
   try {
     const res = await fetch('/api/vehiculos_taller');
     allVehiculos = await res.json();
     renderTable();
     updateKPIs();
-    document.getElementById('last-update-label').textContent =
-      'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
-  } catch(e) {
-    console.error(e);
-  }
+    document.getElementById('last-update-label').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
+  } catch(e) { console.error(e); }
 }
-
-// ---------------------------------------------------------------
-// Defectuosos / Recambio section
-// ---------------------------------------------------------------
-let allDefectuosos = [];
-let currentFilterDefect = 'all';
 
 async function loadDefectuosos() {
   try {
@@ -416,18 +366,174 @@ async function loadDefectuosos() {
     allDefectuosos = await res.json();
     renderTableDefect();
     updateKPIsDefect();
-  } catch(e) {
-    console.error('Error cargando defectuosos:', e);
+  } catch(e) { console.error(e); }
+}
+
+// ---- Stamp (sellos de entrada) ----
+async function stampFecha(chasis, campo) {
+  const label = campo === 'fecha_entrega_log' ? 'Logística' : 'Taller';
+  if (!confirm(`¿Confirmar que ${label} registra la entrada de ${chasis} hoy?`)) return;
+  try {
+    const r = await fetch('/api/stamp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chasis, campo })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showToast(`✓ ${label} confirmado: ${d.fecha}`, 'success');
+      loadVehiculos();
+    } else {
+      showToast('Error: ' + d.error, 'danger');
+    }
+  } catch(e) { showToast('Error de conexión', 'danger'); }
+}
+
+// ---- Marcar entregado ----
+async function marcarEntregado(chasis) {
+  if (!confirm(`¿Marcar ${chasis} como ENTREGADO hoy?`)) return;
+  try {
+    const r = await fetch('/api/marcar_entregado', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chasis })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showToast(`✓ Marcado como entregado: ${d.fecha}`, 'success');
+      loadVehiculos();
+    } else {
+      showToast('Error: ' + d.error, 'danger');
+    }
+  } catch(e) { showToast('Error de conexión', 'danger'); }
+}
+
+// ---- Render main table ----
+function renderTable() {
+  const tbody = document.getElementById('taller-tbody');
+  let data = allVehiculos;
+  if (currentFilter !== 'all') data = data.filter(v => v.taller === currentFilter);
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay vehículos${currentFilter !== 'all' ? ' en ' + currentFilter : ''}</td></tr>`;
+    return;
   }
+
+  tbody.innerHTML = data.map(v => {
+    const entregado = !!v.fecha_salida_real;
+    const diasInfo  = calcDias(v.fecha_entrada, v.fecha_salida_est, entregado);
+    const estadoBadge = estadoClass(v.estado2);
+
+    const tallerTag = v.taller === 'pintura'
+      ? `<span class="badge tag-pintura rounded-pill">TALLER PINTURA</span>`
+      : `<span class="badge tag-mecanica rounded-pill">TALLER MECÁNICA</span>`;
+
+    // Entrada Taller: fecha + sellos L y T
+    const fEntrada = v.fecha_entrada ? formatDate(v.fecha_entrada) : '—';
+    const stampLog  = v.fecha_entrega_log
+      ? `<span class="stamp-btn stamped" title="Logística confirmó ${v.fecha_entrega_log}"><i class="bi bi-truck"></i> L: ${fmtShort(v.fecha_entrega_log)}</span>`
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log')" title="Logística confirma entrega"><i class="bi bi-truck"></i> Logística</span>`;
+    const stampTaller = v.fecha_recibido_taller
+      ? `<span class="stamp-btn stamped" title="Taller confirmó ${v.fecha_recibido_taller}"><i class="bi bi-wrench"></i> T: ${fmtShort(v.fecha_recibido_taller)}</span>`
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo"><i class="bi bi-wrench"></i> Taller</span>`;
+
+    // Salida Estimada: fecha + badge Pendiente/Entregado
+    const fSalida = v.fecha_salida_est ? formatDate(v.fecha_salida_est) : '—';
+    const salidaBadge = entregado
+      ? `<span class="badge-entregado" title="Entregado el ${v.fecha_salida_real}">✓ Entregado</span>`
+      : `<span class="badge-pendiente" onclick="marcarEntregado('${esc(v.chasis)}')" title="Clic para marcar como entregado">Pendiente</span>`;
+
+    return `<tr class="vehicle-row">
+      <td><code class="chasis-code">${v.chasis}</code></td>
+      <td>
+        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
+        <div class="text-muted small">${v.color}</div>
+      </td>
+      <td class="small text-muted">${formatDate(v.fecha_reporte)}</td>
+      <td>
+        <div class="small mb-1">${fEntrada}</div>
+        <div class="d-flex flex-column gap-1">${stampLog}${stampTaller}</div>
+      </td>
+      <td>
+        <div class="small mb-1">${fSalida}</div>
+        ${salidaBadge}
+      </td>
+      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
+      <td>${tallerTag}</td>
+      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
+      <td class="small">${v.dano_logistica ? esc(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.dano_taller ? esc(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}"
+          onclick="openEditById('${esc(v.chasis)}')" title="Editar">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- Render defectuosos ----
+function renderTableDefect() {
+  const tbody = document.getElementById('defect-tbody');
+  let data = allDefectuosos;
+  if (currentFilterDefect !== 'all')
+    data = data.filter(v => (v.estado2 || '').toUpperCase() === currentFilterDefect.toUpperCase());
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay vehículos${currentFilterDefect !== 'all' ? ' con estado ' + currentFilterDefect : ''}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(v => {
+    const diasInfo = calcDias(v.fecha_entrada, v.fecha_salida_est, false);
+    const estadoBadge = estadoClass(v.estado2);
+    const ubicTag = `<span class="badge rounded-pill" style="background:#6c757d22;color:#495057;border:1px solid #6c757d55;font-size:.75rem;">${esc(v.ubicacion || '—')}</span>`;
+    return `<tr class="vehicle-row">
+      <td><code class="chasis-code">${v.chasis}</code></td>
+      <td><div class="fw-semibold">${v.marca} ${v.modelo}</div><div class="text-muted small">${v.color}</div></td>
+      <td class="small text-muted">${formatDate(v.fecha_reporte)}</td>
+      <td class="small">${formatDate(v.fecha_entrada)}</td>
+      <td class="small">${formatDate(v.fecha_salida_est)}</td>
+      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
+      <td>${ubicTag}</td>
+      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
+      <td class="small">${v.dano_logistica ? esc(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
+      <td class="small">${v.dano_taller ? esc(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}"
+          onclick="openEditByIdDefect('${esc(v.chasis)}')" title="Editar">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- Filters ----
+function setFilter(f) {
+  currentFilter = f;
+  ['all','mecanica','pintura'].forEach(id => {
+    const el = document.getElementById('filter-'+id);
+    if (el) { el.classList.remove('active'); }
+  });
+  document.getElementById('filter-'+f).classList.add('active');
+  renderTable();
+}
+
+function filterTable(q) {
+  const term = q.trim().toLowerCase();
+  document.querySelectorAll('#taller-tbody .vehicle-row').forEach(row => {
+    const chasis = row.querySelector('.chasis-code')?.textContent.toLowerCase() || '';
+    row.style.display = (!term || chasis.includes(term)) ? '' : 'none';
+  });
 }
 
 function setFilterDefect(f) {
   currentFilterDefect = f;
   ['all','defectuoso','recambio'].forEach(id => {
-    const el = document.getElementById('filter-defect-' + id);
+    const el = document.getElementById('filter-defect-'+id);
     if (el) el.classList.remove('active');
   });
-  const el = document.getElementById('filter-defect-' + f.toLowerCase());
+  const el = document.getElementById('filter-defect-'+f.toLowerCase());
   if (el) el.classList.add('active');
   renderTableDefect();
 }
@@ -440,225 +546,69 @@ function filterTableDefect(q) {
   });
 }
 
-function renderTableDefect() {
-  const tbody = document.getElementById('defect-tbody');
-  let data = allDefectuosos;
-  if (currentFilterDefect !== 'all') {
-    data = data.filter(v => (v.estado2 || '').toUpperCase() === currentFilterDefect.toUpperCase());
-  }
-
-  if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">
-      No hay vehículos${currentFilterDefect !== 'all' ? ' con estado ' + currentFilterDefect : ''}
-    </td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(v => {
-    const diasInfo = calcDias(v.fecha_entrada, v.fecha_salida_est);
-    const estadoBadge = estadoClass(v.estado2);
-    const ubicTag = `<span class="badge rounded-pill" style="background:#6c757d22;color:#495057;border:1px solid #6c757d55;font-size:.75rem;">${escapeHtml(v.ubicacion || '—')}</span>`;
-
-    return `<tr class="vehicle-row">
-      <td><code class="chasis-code">${v.chasis}</code></td>
-      <td>
-        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
-        <div class="text-muted small">${v.color}</div>
-      </td>
-      <td class="small">${formatDate(v.fecha_reporte)}</td>
-      <td class="small">${formatDate(v.fecha_entrada)}</td>
-      <td class="small">${formatDate(v.fecha_salida_est)}</td>
-      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
-      <td>${ubicTag}</td>
-      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
-      <td class="small">${v.dano_logistica ? escapeHtml(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
-      <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
-      <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
-      <td>
-        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}" title="${v.notas ? 'Editar (tiene nota)' : 'Editar'}"
-          onclick="openEditByIdDefect('${escapeHtml(v.chasis)}')">
-          <i class="bi bi-pencil"></i>
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function openEditByIdDefect(chasis) {
-  const v = allDefectuosos.find(x => x.chasis === chasis);
-  if (v) openEdit(v);
-}
-
-function updateKPIsDefect() {
-  const defect = allDefectuosos.filter(v => (v.estado2 || '').toUpperCase() === 'DEFECTUOSO').length;
-  const recambio = allDefectuosos.filter(v => (v.estado2 || '').toUpperCase() === 'RECAMBIO').length;
-  document.getElementById('kpi-defectuosos').textContent = defect;
-  document.getElementById('kpi-recambio').textContent = recambio;
-}
-
-function descargarCSV() {
-  const headers = ['Chasis','Vehículo','Taller','Entrada','Salida Est.','Días','Estado2','Problemas'];
-  const data = currentFilter === 'all' ? allVehiculos : allVehiculos.filter(v => v.taller === currentFilter);
-  const rows = data.map(v => {
-    const dias = calcDias(v.fecha_entrada, v.fecha_salida_est);
-    return [
-      v.chasis,
-      `${v.marca} ${v.modelo} ${v.color}`,
-      v.taller === 'pintura' ? 'TALLER PINTURA' : 'TALLER MECÁNICA',
-      v.fecha_entrada || '',
-      v.fecha_salida_est || '',
-      dias.label,
-      v.ubicacion || v.localizacion2 || '',
-      v.estado2 || '',
-      v.problemas || ''
-    ].map(c => `"${String(c).replace(/"/g,'""')}"`).join(',');
-  });
-  const csv = [headers.join(','), ...rows].join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
-  const sufijo = currentFilter === 'all' ? 'todos' : currentFilter;
-  a.download = `control_talleres_${sufijo}_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-}
-
-function filterTable(q) {
-  const term = q.trim().toLowerCase();
-  document.querySelectorAll('#taller-tbody .vehicle-row').forEach(row => {
-    const chasis = row.querySelector('.chasis-code')?.textContent.toLowerCase() || '';
-    row.style.display = (!term || chasis.includes(term)) ? '' : 'none';
-  });
-}
-
-function setFilter(f) {
-  currentFilter = f;
-  ['all','mecanica','pintura'].forEach(id => {
-    document.getElementById('filter-'+id).classList.remove('active','btn-outline-secondary','btn-outline-primary','btn-outline-warning','btn-secondary','btn-primary','btn-warning');
-  });
-  const classes = {all:'btn-outline-secondary', mecanica:'btn-outline-primary', pintura:'btn-outline-warning'};
-  document.getElementById('filter-'+f).classList.add('active', classes[f]);
-  renderTable();
-}
-
-function renderTable() {
-  const tbody = document.getElementById('taller-tbody');
-  let data = allVehiculos;
-  if (currentFilter !== 'all') data = data.filter(v => v.taller === currentFilter);
-
-  if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">
-      No hay vehículos en taller${currentFilter !== 'all' ? ' de '+currentFilter : ''}
-    </td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(v => {
-    const diasInfo  = calcDias(v.fecha_entrada, v.fecha_salida_est);
-    const estadoBadge = estadoClass(v.estado2);
-    const tallerTag = v.taller === 'pintura'
-      ? `<span class="badge tag-pintura rounded-pill">TALLER PINTURA</span>`
-      : `<span class="badge tag-mecanica rounded-pill">TALLER MECÁNICA</span>`;
-
-    return `<tr class="vehicle-row">
-      <td><code class="chasis-code">${v.chasis}</code></td>
-      <td>
-        <div class="fw-semibold">${v.marca} ${v.modelo}</div>
-        <div class="text-muted small">${v.color}</div>
-      </td>
-      <td class="small">${formatDate(v.fecha_reporte)}</td>
-      <td class="small">${formatDate(v.fecha_entrada)}</td>
-      <td class="small">${formatDate(v.fecha_salida_est)}</td>
-      <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
-      <td>${tallerTag}</td>
-      <td><span class="badge ${estadoBadge} rounded-pill">${v.estado2 || '—'}</span></td>
-      <td class="small">${v.dano_logistica ? escapeHtml(v.dano_logistica) : '<span class="text-muted">—</span>'}</td>
-      <td class="small">${v.dano_taller ? escapeHtml(v.dano_taller) : '<span class="text-muted">—</span>'}</td>
-      <td class="small">${v.origen_dano ? escapeHtml(v.origen_dano) : '<span class="text-muted">—</span>'}</td>
-      <td>
-        <button class="action-btn btn btn-sm btn-outline-primary ${v.notas ? 'nota-dot' : ''}" title="${v.notas ? 'Editar (tiene nota)' : 'Editar'}"
-          onclick="openEditById('${escapeHtml(v.chasis)}')">
-          <i class="bi bi-pencil"></i>
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
+// ---- KPIs ----
 function updateKPIs() {
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-
   const mec = allVehiculos.filter(v => v.taller === 'mecanica');
   const pin = allVehiculos.filter(v => v.taller === 'pintura');
-
   document.getElementById('kpi-total').textContent    = allVehiculos.length;
   document.getElementById('kpi-mecanica').textContent = mec.length;
   document.getElementById('kpi-pintura').textContent  = pin.length;
-
-  const vencMec = mec.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
-  const vencPin = pin.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
-  document.getElementById('kpi-vencidos-mec').textContent = vencMec;
-  document.getElementById('kpi-vencidos-pin').textContent = vencPin;
-
-  // Finalizados esta semana: fecha_salida_est dentro de la semana actual
-  const inicioSemana = new Date(hoy);
-  inicioSemana.setDate(hoy.getDate() - hoy.getDay());
-  const finSemana = new Date(inicioSemana);
-  finSemana.setDate(inicioSemana.getDate() + 6);
-
-  const finMec = mec.filter(v => {
-    if (!v.fecha_salida_est) return false;
-    const f = new Date(v.fecha_salida_est);
-    return f >= inicioSemana && f <= finSemana;
-  }).length;
-  const finPin = pin.filter(v => {
-    if (!v.fecha_salida_est) return false;
-    const f = new Date(v.fecha_salida_est);
-    return f >= inicioSemana && f <= finSemana;
-  }).length;
-  document.getElementById('kpi-fin-mec').textContent = finMec;
-  document.getElementById('kpi-fin-pin').textContent = finPin;
+  document.getElementById('kpi-vencidos-mec').textContent = mec.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
+  document.getElementById('kpi-vencidos-pin').textContent = pin.filter(v => v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy).length;
+  const ini = new Date(hoy); ini.setDate(hoy.getDate()-hoy.getDay());
+  const fin = new Date(ini); fin.setDate(ini.getDate()+6);
+  const inWeek = v => { if (!v.fecha_salida_est) return false; const f=new Date(v.fecha_salida_est); return f>=ini&&f<=fin; };
+  document.getElementById('kpi-fin-mec').textContent = mec.filter(inWeek).length;
+  document.getElementById('kpi-fin-pin').textContent = pin.filter(inWeek).length;
 }
 
-// ---------------------------------------------------------------
-// Edit modal
-// ---------------------------------------------------------------
-function openEditById(chasis) {
-  const v = allVehiculos.find(x => x.chasis === chasis);
-  if (v) openEdit(v);
+function updateKPIsDefect() {
+  document.getElementById('kpi-defectuosos').textContent = allDefectuosos.filter(v => (v.estado2||'').toUpperCase()==='DEFECTUOSO').length;
+  document.getElementById('kpi-recambio').textContent    = allDefectuosos.filter(v => (v.estado2||'').toUpperCase()==='RECAMBIO').length;
 }
+
+// ---- Edit modal ----
+function openEditById(chasis) { const v=allVehiculos.find(x=>x.chasis===chasis); if(v) openEdit(v); }
+function openEditByIdDefect(chasis) { const v=allDefectuosos.find(x=>x.chasis===chasis); if(v) openEdit(v); }
 
 function openEdit(v) {
-  document.getElementById('m-chasis').textContent       = v.chasis;
-  document.getElementById('m-vehiculo').textContent     = `${v.marca} ${v.modelo} ${v.color}`;
-  document.getElementById('m-estado2').textContent      = v.estado2 || '—';
-  document.getElementById('m-ubicacion').textContent    = v.ubicacion || v.localizacion2 || '—';
-  document.getElementById('m-cliente').textContent      = v.cliente || '—';
-  document.getElementById('m-chasis-hidden').value      = v.chasis;
-  document.getElementById('m-fecha-reporte').value      = v.fecha_reporte || '';
-  document.getElementById('m-fecha-entrada').value      = v.fecha_entrada || '';
-  document.getElementById('m-fecha-salida').value       = v.fecha_salida_est || '';
-  document.getElementById('m-dano-logistica').value     = v.dano_logistica || '';
-  document.getElementById('m-dano-taller').value        = v.dano_taller || '';
-  document.getElementById('m-origen-dano').value        = v.origen_dano || '';
-  document.getElementById('m-notas').value              = v.notas || '';
+  document.getElementById('m-chasis').textContent    = v.chasis;
+  document.getElementById('m-vehiculo').textContent  = `${v.marca} ${v.modelo} ${v.color}`;
+  document.getElementById('m-estado2').textContent   = v.estado2 || '—';
+  document.getElementById('m-ubicacion').textContent = v.ubicacion || v.localizacion2 || '—';
+  document.getElementById('m-cliente').textContent   = v.cliente || '—';
+  document.getElementById('m-chasis-hidden').value   = v.chasis;
+  document.getElementById('m-fecha-reporte').value   = v.fecha_reporte || '';
+  document.getElementById('m-fecha-entrada').value   = v.fecha_entrada || '';
+  document.getElementById('m-fecha-salida').value    = v.fecha_salida_est || '';
+  document.getElementById('m-fecha-entrega-log').value      = v.fecha_entrega_log || '';
+  document.getElementById('m-fecha-recibido-taller').value  = v.fecha_recibido_taller || '';
+  document.getElementById('m-fecha-salida-real').value      = v.fecha_salida_real || '';
+  document.getElementById('m-dano-logistica').value  = v.dano_logistica || '';
+  document.getElementById('m-dano-taller').value     = v.dano_taller || '';
+  document.getElementById('m-origen-dano').value     = v.origen_dano || '';
+  document.getElementById('m-notas').value           = v.notas || '';
   editModal.show();
 }
 
 async function guardarTaller() {
   try {
     const payload = {
-      chasis:           document.getElementById('m-chasis-hidden').value,
-      fecha_reporte:    document.getElementById('m-fecha-reporte').value,
-      fecha_entrada:    document.getElementById('m-fecha-entrada').value,
-      fecha_salida_est: document.getElementById('m-fecha-salida').value,
-      dano_logistica:   document.getElementById('m-dano-logistica').value,
-      dano_taller:      document.getElementById('m-dano-taller').value,
-      origen_dano:      document.getElementById('m-origen-dano').value,
-      notas:            document.getElementById('m-notas').value,
+      chasis:                document.getElementById('m-chasis-hidden').value,
+      fecha_reporte:         document.getElementById('m-fecha-reporte').value,
+      fecha_entrada:         document.getElementById('m-fecha-entrada').value,
+      fecha_salida_est:      document.getElementById('m-fecha-salida').value,
+      fecha_entrega_log:     document.getElementById('m-fecha-entrega-log').value,
+      fecha_recibido_taller: document.getElementById('m-fecha-recibido-taller').value,
+      fecha_salida_real:     document.getElementById('m-fecha-salida-real').value,
+      dano_logistica:        document.getElementById('m-dano-logistica').value,
+      dano_taller:           document.getElementById('m-dano-taller').value,
+      origen_dano:           document.getElementById('m-origen-dano').value,
+      notas:                 document.getElementById('m-notas').value,
     };
-    const res  = await fetch('/api/guardar_taller', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch('/api/guardar_taller', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     });
     const data = await res.json();
     if (data.ok) {
@@ -674,70 +624,64 @@ async function guardarTaller() {
   }
 }
 
-// ---------------------------------------------------------------
-// Delete from taller
-// ---------------------------------------------------------------
 function confirmarEliminar(chasis) {
-  if (!confirm(`¿Seguro que querés sacar ${chasis} del taller?\n(No se borra de la base de datos, solo del tracker de taller.)`)) return;
-  fetch('/api/eliminar_taller/' + encodeURIComponent(chasis), { method: 'DELETE' })
-    .then(r => r.json())
-    .then(d => { if (d.ok) { showToast('Vehículo removido del taller', 'warning'); loadVehiculos(); } });
+  if (!confirm(`¿Seguro que querés sacar ${chasis} del taller?`)) return;
+  fetch('/api/eliminar_taller/' + encodeURIComponent(chasis), { method:'DELETE' })
+    .then(r=>r.json()).then(d=>{ if(d.ok){ showToast('Vehículo removido','warning'); loadVehiculos(); }});
 }
 
-// ---------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------
-function calcDias(entrada, salidaEst) {
-  if (!entrada) return { label: '—', cls: '' };
-  const hoy   = new Date(); hoy.setHours(0,0,0,0);
+// ---- Helpers ----
+function calcDias(entrada, salidaEst, entregado) {
+  if (!entrada) return { label:'—', cls:'' };
+  const hoy  = new Date(); hoy.setHours(0,0,0,0);
   const start = new Date(entrada);
-  const dias  = Math.round((hoy - start) / 86400000);
-  const label = dias === 0 ? 'Hoy' : `${dias}d`;
-
-  if (!salidaEst) return { label, cls: 'days-ok' };
+  const dias  = Math.round((hoy-start)/86400000);
+  const label = dias===0?'Hoy':`${dias}d`;
+  if (entregado) return { label, cls:'days-green' };
+  if (!salidaEst) return { label, cls:'days-ok' };
   const fin  = new Date(salidaEst);
-  const diff = Math.round((fin - hoy) / 86400000);
-  if (diff < 0)  return { label: `${label} ⚠`, cls: 'days-late' };
-  if (diff <= 2) return { label, cls: 'days-warn' };
-  return { label, cls: 'days-ok' };
+  const diff = Math.round((fin-hoy)/86400000);
+  if (diff<0)  return { label:`${label} ⚠`, cls:'days-late' };
+  if (diff<=2) return { label, cls:'days-warn' };
+  return { label, cls:'days-ok' };
 }
 
 function formatDate(d) {
   if (!d) return '—';
-  const [y, m, day] = d.split('-');
-  return `${day}/${m}/${y}`;
+  try { const [y,m,day]=d.slice(0,10).split('-'); return `${day}/${m}/${y}`; } catch(e){ return d; }
+}
+
+function fmtShort(d) {
+  if (!d) return '—';
+  try { const [y,m,day]=d.slice(0,10).split('-'); return `${day}/${m}`; } catch(e){ return d; }
 }
 
 function estadoClass(estado) {
-  const map = {
-    'DISPONIBLE': 'badge-disponible',
-    'VENDIDO':    'badge-vendido',
-    'RESERVADO':  'badge-reservado',
-    'EXHIBICION': 'badge-exhibicion',
-    'DEFECTUOSO': 'badge-defectuoso',
-  };
-  return map[(estado || '').toUpperCase()] || 'badge-default';
+  const map = {'DISPONIBLE':'badge-disponible','VENDIDO':'badge-vendido','RESERVADO':'badge-reservado',
+               'EXHIBICION':'badge-exhibicion','DEFECTUOSO':'badge-defectuoso'};
+  return map[(estado||'').toUpperCase()]||'badge-default';
 }
 
-function escapeHtml(t) {
+function esc(t) {
   return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function escapeHtml(t) { return esc(t); }
+
 function showToast(msg, type='success') {
-  const id = 'toast-' + Date.now();
-  const colors = { success:'#198754', warning:'#fd7e14', danger:'#dc3545' };
-  const el = document.createElement('div');
-  el.id = id;
-  el.innerHTML = `<div class="toast show align-items-center text-white border-0 mb-2"
+  const id='toast-'+Date.now();
+  const colors={success:'#198754',warning:'#fd7e14',danger:'#dc3545'};
+  const el=document.createElement('div');
+  el.id=id;
+  el.innerHTML=`<div class="toast show align-items-center text-white border-0 mb-2"
     style="background:${colors[type]||colors.success};border-radius:10px;min-width:250px;">
     <div class="d-flex">
       <div class="toast-body">${msg}</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto"
         onclick="document.getElementById('${id}').remove()"></button>
-    </div>
-  </div>`;
+    </div></div>`;
   document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => { try { document.getElementById(id).remove(); } catch(e){} }, 4000);
+  setTimeout(()=>{ try{document.getElementById(id).remove();}catch(e){} },5000);
 }
 </script>
 </body>
