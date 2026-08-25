@@ -187,10 +187,18 @@ def stamp():
         hoy = date.today().isoformat()
         conn = get_db()
         cur = conn.cursor()
-        cur.execute(f"""
-            INSERT INTO taller_data (chasis, {campo}) VALUES (%s,%s)
-            ON CONFLICT (chasis) DO UPDATE SET {campo}=%s
-        """, (chasis, hoy, hoy))
+        if campo == "fecha_recibido_taller":
+            # Taller confirma recibo → también seteamos fecha_entrada automáticamente
+            cur.execute("""
+                INSERT INTO taller_data (chasis, fecha_recibido_taller, fecha_entrada)
+                VALUES (%s,%s,%s)
+                ON CONFLICT (chasis) DO UPDATE SET fecha_recibido_taller=%s, fecha_entrada=COALESCE(taller_data.fecha_entrada,%s)
+            """, (chasis, hoy, hoy, hoy, hoy))
+        else:
+            cur.execute(f"""
+                INSERT INTO taller_data (chasis, {campo}) VALUES (%s,%s)
+                ON CONFLICT (chasis) DO UPDATE SET {campo}=%s
+            """, (chasis, hoy, hoy))
         conn.commit()
         cur.close()
         conn.close()

@@ -52,10 +52,10 @@
 
   /* Stamp buttons (L / T confirmaciones de entrada) */
   .stamp-btn {
-    display:inline-flex; align-items:center; gap:3px;
-    font-size:.7rem; padding:2px 6px; border-radius:4px;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    font-size:.78rem; padding:5px 10px; border-radius:6px;
     border:1px solid #ccc; background:#f8f9fa; color:#555; cursor:pointer;
-    white-space:nowrap; transition:background .15s;
+    white-space:nowrap; transition:background .15s; width:100%;
   }
   .stamp-btn.stamped { background:#d1e7dd; border-color:#a3cfbb; color:#0a3622; font-weight:600; }
   .stamp-btn:hover:not(.stamped) { background:#e9ecef; }
@@ -255,8 +255,12 @@
             <input type="date" class="form-control" id="m-fecha-reporte">
           </div>
           <div class="col-sm-4">
-            <label class="form-label fw-semibold">Entrada Taller</label>
-            <input type="date" class="form-control" id="m-fecha-entrada">
+            <label class="form-label text-muted" style="font-size:.8rem;">
+              <i class="bi bi-calendar-check me-1"></i>Fecha Entrada (corrección manual)
+            </label>
+            <input type="date" class="form-control form-control-sm text-muted" id="m-fecha-entrada"
+              title="Se llena automáticamente cuando Taller confirma recibo. Editar solo para corregir errores.">
+            <small class="text-muted" style="font-size:.7rem;">Auto-registrada al sellar ✔ Taller</small>
           </div>
           <div class="col-sm-4">
             <label class="form-label fw-semibold">Salida Estimada</label>
@@ -426,14 +430,13 @@ function renderTable() {
       ? `<span class="badge tag-pintura rounded-pill">TALLER PINTURA</span>`
       : `<span class="badge tag-mecanica rounded-pill">TALLER MECÁNICA</span>`;
 
-    // Entrada Taller: fecha + sellos L y T
-    const fEntrada = v.fecha_entrada ? formatDate(v.fecha_entrada) : '—';
+    // Entrada Taller: solo sellos L y T (botones grandes, sin fecha encima)
     const stampLog  = v.fecha_entrega_log
-      ? `<span class="stamp-btn stamped" title="Logística confirmó ${v.fecha_entrega_log}"><i class="bi bi-truck"></i> L: ${fmtShort(v.fecha_entrega_log)}</span>`
+      ? `<span class="stamp-btn stamped" title="Logística confirmó ${v.fecha_entrega_log}"><i class="bi bi-truck"></i> Log: ${fmtShort(v.fecha_entrega_log)}</span>`
       : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log')" title="Logística confirma entrega"><i class="bi bi-truck"></i> Logística</span>`;
     const stampTaller = v.fecha_recibido_taller
-      ? `<span class="stamp-btn stamped" title="Taller confirmó ${v.fecha_recibido_taller}"><i class="bi bi-wrench"></i> T: ${fmtShort(v.fecha_recibido_taller)}</span>`
-      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo"><i class="bi bi-wrench"></i> Taller</span>`;
+      ? `<span class="stamp-btn stamped" title="Taller confirmó ${v.fecha_recibido_taller}"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_recibido_taller)}</span>`
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo — también registra Fecha Entrada"><i class="bi bi-wrench"></i> Taller</span>`;
 
     // Salida Estimada: fecha + badge Pendiente/Entregado
     const fSalida = v.fecha_salida_est ? formatDate(v.fecha_salida_est) : '—';
@@ -448,8 +451,7 @@ function renderTable() {
         <div class="text-muted small">${v.color}</div>
       </td>
       <td class="small text-muted">${formatDate(v.fecha_reporte)}</td>
-      <td>
-        <div class="small mb-1">${fEntrada}</div>
+      <td style="min-width:140px;">
         <div class="d-flex flex-column gap-1">${stampLog}${stampTaller}</div>
       </td>
       <td>
