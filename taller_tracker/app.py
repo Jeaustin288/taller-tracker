@@ -77,12 +77,12 @@ def upload_csv():
                 (row.get("Marca") or "").strip(),
                 (row.get("Modelo") or "").strip(),
                 (row.get("Color") or "").strip(),
-                (row.get("Calc-Cliente") or "").strip(),
+                (row.get("Calc-Cliente") or row.get("Cliente") or "").strip(),
                 (row.get("Estado2") or "").strip(),
-                (row.get("Toma Fisica Inventarios - UBICACION") or "").strip(),
+                (row.get("Toma Fisica Inventarios - UBICACION") or row.get("UBICACION FISICA") or "").strip(),
                 (row.get("LOCALIZACION2") or "").strip(),
                 (row.get("Nombre del produto") or row.get("Nombre del producto") or "").strip(),
-                (row.get("Toma Fisica Inventario - Fecha Ultima Toma") or "").strip(),
+                (row.get("Toma Fisica Inventario - Fecha Ultima Toma") or row.get("Fecha Ultima Toma Inventario") or "").strip(),
             ))
         if not params:
             return jsonify({"ok": True, "insertados": 0, "actualizados": 0})
