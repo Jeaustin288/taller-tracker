@@ -227,6 +227,19 @@ def marcar_entregado():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+@app.route("/api/limpiar_todo", methods=["POST"])
+def limpiar_todo():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("TRUNCATE TABLE taller_data, vehiculos RESTART IDENTITY CASCADE")
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/api/eliminar_taller/<chasis>", methods=["DELETE"])
 def eliminar_taller(chasis):
     conn = get_db()

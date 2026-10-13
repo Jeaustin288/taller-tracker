@@ -91,6 +91,9 @@
       <button class="btn btn-sm btn-outline-light" onclick="loadVehiculos();loadDefectuosos()">
         <i class="bi bi-arrow-clockwise"></i> Actualizar
       </button>
+      <button class="btn btn-sm btn-outline-danger" onclick="limpiarTodo()" title="Borrar todos los datos y empezar de cero">
+        <i class="bi bi-trash3"></i> Limpiar todo
+      </button>
     </div>
   </div>
 </nav>
@@ -669,6 +672,24 @@ function esc(t) {
 }
 
 function escapeHtml(t) { return esc(t); }
+
+async function limpiarTodo() {
+  const c1 = confirm("¿Seguro que querés borrar TODOS los datos?\nEsto elimina vehículos, fechas, sellos y notas. No se puede deshacer.");
+  if (!c1) return;
+  const c2 = confirm("Segunda confirmación: ¿Borrar TODO y empezar de cero?");
+  if (!c2) return;
+  try {
+    const r = await fetch('/api/limpiar_todo', { method:'POST' });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('✓ Datos eliminados. Podés subir el CSV nuevo.', 'success');
+      allVehiculos = []; allDefectuosos = [];
+      renderTable(); renderTableDefect(); updateKPIs(); updateKPIsDefect();
+    } else {
+      showToast('Error: ' + d.error, 'danger');
+    }
+  } catch(e) { showToast('Error de conexión', 'danger'); }
+}
 
 function showToast(msg, type='success') {
   const id='toast-'+Date.now();
