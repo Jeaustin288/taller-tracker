@@ -65,7 +65,15 @@ def upload_csv():
         file = request.files.get("csv_file")
         if not file:
             return jsonify({"error": "No se recibio archivo"}), 400
-        content = file.read().decode("utf-8-sig")
+        raw = file.read()
+        for enc in ("utf-8-sig", "utf-8", "latin-1", "cp1252"):
+            try:
+                content = raw.decode(enc)
+                break
+            except Exception:
+                continue
+        else:
+            content = raw.decode("latin-1", errors="replace")
         reader = csv.DictReader(io.StringIO(content))
         params = []
         for row in reader:
