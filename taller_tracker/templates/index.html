@@ -445,10 +445,10 @@ function renderTable() {
     // Entrada Taller: solo sellos L y T (botones grandes, sin fecha encima)
     const stampLog  = v.fecha_entrega_log
       ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log',true)" title="Logística confirmó ${v.fecha_entrega_log} — clic para reversar"><i class="bi bi-truck"></i> Log: ${fmtShort(v.fecha_entrega_log)}</span>`
-      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log')" title="Logística confirma entrega"><i class="bi bi-truck"></i> Logística</span>`;
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log')" title="Logística confirma entrega"><i class="bi bi-truck"></i> Logística entrega</span>`;
     const stampTaller = v.fecha_recibido_taller
       ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller',true)" title="Taller confirmó ${v.fecha_recibido_taller} — clic para reversar"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_recibido_taller)}</span>`
-      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo — también registra Fecha Entrada"><i class="bi bi-wrench"></i> Taller</span>`;
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo — también registra Fecha Entrada"><i class="bi bi-wrench"></i> Taller recibe</span>`;
 
     // Salida Estimada: fecha + sellos Taller entrega / Logística recibe
     const fSalida = v.fecha_salida_est ? formatDate(v.fecha_salida_est) : '—';
