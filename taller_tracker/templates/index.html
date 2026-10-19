@@ -525,11 +525,20 @@ function renderTableDefect() {
 // ---- Filters ----
 function setFilter(f) {
   currentFilter = f;
-  ['all','mecanica','pintura','defectuoso','recambio'].forEach(id => {
-    const el = document.getElementById('filter-'+id);
-    if (el) el.classList.remove('active');
+  // Resaltar KPI card activa
+  document.querySelectorAll('.kpi-clickable').forEach(el => {
+    el.style.background = '';
+    el.style.boxShadow = '';
   });
-  document.getElementById('filter-'+f).classList.add('active');
+  const kpiMap = {
+    'all': 'kpi-total', 'mecanica': 'kpi-mecanica', 'pintura': 'kpi-pintura',
+    'defectuoso': 'kpi-defectuosos', 'recambio': 'kpi-recambio'
+  };
+  const activeEl = document.getElementById(kpiMap[f]);
+  if (activeEl) {
+    const card = activeEl.closest('.kpi-clickable');
+    if (card) { card.style.background = '#f0f4ff'; card.style.boxShadow = 'inset 0 -3px 0 #0d6efd'; }
+  }
   renderTable();
 }
 
