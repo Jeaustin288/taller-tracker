@@ -442,7 +442,7 @@ function renderTable() {
   }
 
   tbody.innerHTML = data.map(v => {
-    const entregado = !!v.fecha_salida_real;
+    const entregado = !!(v.fecha_salida_real && v.fecha_salida_log);
     const diasInfo  = calcDias(v.fecha_entrada, v.fecha_salida_est, entregado);
     const estadoBadge = estadoClass(v.estado2);
 
@@ -674,9 +674,7 @@ function calcDias(entrada, salidaEst, entregado) {
   if (!entrada) return { label:'—', cls:'' };
   const hoy  = new Date(); hoy.setHours(0,0,0,0);
   if (entregado) {
-    // Mostrar días que estuvo en taller
-    const diasTaller = Math.round((hoy - new Date(entrada)) / 86400000);
-    return { label: diasTaller===0?'Hoy':`${diasTaller}d`, cls:'days-green' };
+    return { label:'Entregado', cls:'days-green', badge:true };
   }
   if (!salidaEst) {
     // Sin fecha estimada: mostrar días en taller
