@@ -654,15 +654,22 @@ function confirmarEliminar(chasis) {
 function calcDias(entrada, salidaEst, entregado) {
   if (!entrada) return { label:'—', cls:'' };
   const hoy  = new Date(); hoy.setHours(0,0,0,0);
-  const start = new Date(entrada);
-  const dias  = Math.round((hoy-start)/86400000);
-  const label = dias===0?'Hoy':`${dias}d`;
-  if (entregado) return { label, cls:'days-green' };
-  if (!salidaEst) return { label, cls:'days-ok' };
+  if (entregado) {
+    // Mostrar días que estuvo en taller
+    const diasTaller = Math.round((hoy - new Date(entrada)) / 86400000);
+    return { label: diasTaller===0?'Hoy':`${diasTaller}d`, cls:'days-green' };
+  }
+  if (!salidaEst) {
+    // Sin fecha estimada: mostrar días en taller
+    const diasTaller = Math.round((hoy - new Date(entrada)) / 86400000);
+    return { label: diasTaller===0?'Hoy':`${diasTaller}d`, cls:'days-ok' };
+  }
+  // Con fecha estimada: mostrar días restantes hasta salida
   const fin  = new Date(salidaEst);
-  const diff = Math.round((fin-hoy)/86400000);
-  if (diff<0)  return { label:`${label} ⚠`, cls:'days-late' };
-  if (diff<=2) return { label, cls:'days-warn' };
+  const diff = Math.round((fin - hoy) / 86400000);
+  const label = diff===0 ? 'Hoy' : diff>0 ? `${diff}d` : `${Math.abs(diff)}d ⚠`;
+  if (diff < 0)  return { label, cls:'days-late' };
+  if (diff <= 2) return { label, cls:'days-warn' };
   return { label, cls:'days-ok' };
 }
 
