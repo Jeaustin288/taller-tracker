@@ -235,6 +235,25 @@ def marcar_entregado():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+@app.route("/api/stamp_borrar", methods=["POST"])
+def stamp_borrar():
+    try:
+        data = request.json or {}
+        chasis = (data.get("chasis") or "").strip()
+        campo = data.get("campo")
+        if not chasis or campo not in ("fecha_entrega_log","fecha_recibido_taller"):
+            return jsonify({"ok": False, "error": "Parametros invalidos"}), 400
+        conn = get_db()
+        cur = conn.cursor()
+        extra = ", fecha_entrada=NULL" if campo == "fecha_recibido_taller" else ""
+        cur.execute(f"UPDATE taller_data SET {campo}=NULL{extra} WHERE chasis=%s", (chasis,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/api/limpiar_todo", methods=["POST"])
 def limpiar_todo():
     try:

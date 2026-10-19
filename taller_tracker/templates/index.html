@@ -378,8 +378,24 @@ async function loadDefectuosos() {
 }
 
 // ---- Stamp (sellos de entrada) ----
-async function stampFecha(chasis, campo) {
+async function stampFecha(chasis, campo, yaEstaMarcado) {
   const label = campo === 'fecha_entrega_log' ? 'Logística' : 'Taller';
+  if (yaEstaMarcado) {
+    const clave = prompt(`Para reversar el sello de ${label} en ${chasis}, ingresá la clave:`);
+    if (clave === null) return; // canceló
+    if (clave !== '050799') { showToast('Clave incorrecta', 'danger'); return; }
+    // Borrar el sello
+    try {
+      const r = await fetch('/api/stamp_borrar', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chasis, campo })
+      });
+      const d = await r.json();
+      if (d.ok) { showToast(`✓ Sello de ${label} reversado`, 'warning'); loadVehiculos(); }
+      else { showToast('Error: ' + d.error, 'danger'); }
+    } catch(e) { showToast('Error de conexión', 'danger'); }
+    return;
+  }
   if (!confirm(`¿Confirmar que ${label} registra la entrada de ${chasis} hoy?`)) return;
   try {
     const r = await fetch('/api/stamp', {
@@ -436,10 +452,10 @@ function renderTable() {
 
     // Entrada Taller: solo sellos L y T (botones grandes, sin fecha encima)
     const stampLog  = v.fecha_entrega_log
-      ? `<span class="stamp-btn stamped" title="Logística confirmó ${v.fecha_entrega_log}"><i class="bi bi-truck"></i> Log: ${fmtShort(v.fecha_entrega_log)}</span>`
+      ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log',true)" title="Logística confirmó ${v.fecha_entrega_log} — clic para reversar"><i class="bi bi-truck"></i> Log: ${fmtShort(v.fecha_entrega_log)}</span>`
       : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_entrega_log')" title="Logística confirma entrega"><i class="bi bi-truck"></i> Logística</span>`;
     const stampTaller = v.fecha_recibido_taller
-      ? `<span class="stamp-btn stamped" title="Taller confirmó ${v.fecha_recibido_taller}"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_recibido_taller)}</span>`
+      ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller',true)" title="Taller confirmó ${v.fecha_recibido_taller} — clic para reversar"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_recibido_taller)}</span>`
       : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo — también registra Fecha Entrada"><i class="bi bi-wrench"></i> Taller</span>`;
 
     // Salida Estimada: fecha + badge Pendiente/Entregado
