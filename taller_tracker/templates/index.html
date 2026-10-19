@@ -28,8 +28,10 @@
   .tag-pintura  { background:#fd7e1422; color:#c96a00; border:1px solid #fd7e1455; }
 
   /* Table spacing */
-  .vehicle-row td { vertical-align:middle; font-size:.88rem; padding:10px 10px; }
-  thead th { font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; padding:10px 10px; white-space:nowrap; }
+  .vehicle-row td { vertical-align:middle; font-size:.88rem; padding:10px 10px; border-bottom:1px solid #eef0f3; border-right:1px solid #eef0f3; }
+  .vehicle-row td:last-child { border-right:none; }
+  thead th { font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; padding:10px 10px; white-space:nowrap; text-align:center; border-bottom:1px solid #dde1e7; border-right:1px solid #eef0f3; }
+  thead th:last-child { border-right:none; }
   .chasis-code { font-family:monospace; font-size:.82rem; color:#555; }
   .action-btn { cursor:pointer; padding:4px 8px; border-radius:6px; border:none; }
 
@@ -172,7 +174,7 @@
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0" id="main-table">
+            <table class="table table-hover mb-0" id="main-table" style="border-collapse:collapse;">
               <thead class="table-light">
                 <tr>
                   <th>Chasis</th>
