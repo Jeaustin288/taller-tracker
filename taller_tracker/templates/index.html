@@ -123,21 +123,21 @@
           </div>
         </div>
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="border-bottom:1px solid #e0e6ef;cursor:pointer;" onclick="setFilter('mecanica')" title="Filtrar vencidos Mecánica">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="border-bottom:1px solid #e0e6ef;cursor:pointer;" onclick="setFilter('vencidos-mecanica')" title="Filtrar vencidos Mecánica">
             <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-mec">—</div>
             <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS</div>
           </div>
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="cursor:pointer;" onclick="setFilter('pintura')" title="Filtrar vencidos Pintura">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="cursor:pointer;" onclick="setFilter('vencidos-pintura')" title="Filtrar vencidos Pintura">
             <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-pin">—</div>
             <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS</div>
           </div>
         </div>
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="border-bottom:1px solid #e0e6ef;cursor:pointer;" onclick="setFilter('fin-mecanica')" title="Filtrar finalizados Mecánica">
             <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-mec">—</div>
             <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA</div>
           </div>
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="cursor:pointer;" onclick="setFilter('fin-pintura')" title="Filtrar finalizados Pintura">
             <div class="fs-3 fw-bold me-3 text-success" id="kpi-fin-pin">—</div>
             <div class="fw-semibold text-uppercase small text-success">FINALIZADOS ESTA SEMANA</div>
           </div>
@@ -417,11 +417,23 @@ async function marcarEntregado(chasis) {
 // ---- Render main table ----
 function renderTable() {
   const tbody = document.getElementById('taller-tbody');
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const ini = new Date(hoy); ini.setDate(hoy.getDate()-hoy.getDay());
+  const fin = new Date(ini); fin.setDate(ini.getDate()+6);
   let data = allVehiculos;
   if (currentFilter === 'mecanica' || currentFilter === 'pintura') {
     data = data.filter(v => v.taller === currentFilter);
   } else if (currentFilter === 'defectuoso' || currentFilter === 'recambio') {
-    data = data.filter(v => (v.estado2 || '').toUpperCase() === currentFilter.toUpperCase());
+    // Incluir vehículos de AMBAS tablas con ese estado
+    data = [...allVehiculos, ...allDefectuosos].filter(v => (v.estado2 || '').toUpperCase() === currentFilter.toUpperCase());
+  } else if (currentFilter === 'fin-mecanica') {
+    data = allVehiculos.filter(v => v.taller === 'mecanica' && v.fecha_salida_est && new Date(v.fecha_salida_est) >= ini && new Date(v.fecha_salida_est) <= fin);
+  } else if (currentFilter === 'fin-pintura') {
+    data = allVehiculos.filter(v => v.taller === 'pintura' && v.fecha_salida_est && new Date(v.fecha_salida_est) >= ini && new Date(v.fecha_salida_est) <= fin);
+  } else if (currentFilter === 'vencidos-mecanica') {
+    data = allVehiculos.filter(v => v.taller === 'mecanica' && v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy);
+  } else if (currentFilter === 'vencidos-pintura') {
+    data = allVehiculos.filter(v => v.taller === 'pintura' && v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy);
   }
 
   if (!data.length) {
@@ -532,7 +544,9 @@ function setFilter(f) {
   });
   const kpiMap = {
     'all': 'kpi-total', 'mecanica': 'kpi-mecanica', 'pintura': 'kpi-pintura',
-    'defectuoso': 'kpi-defectuosos', 'recambio': 'kpi-recambio'
+    'defectuoso': 'kpi-defectuosos', 'recambio': 'kpi-recambio',
+    'fin-mecanica': 'kpi-fin-mec', 'fin-pintura': 'kpi-fin-pin',
+    'vencidos-mecanica': 'kpi-vencidos-mec', 'vencidos-pintura': 'kpi-vencidos-pin'
   };
   const activeEl = document.getElementById(kpiMap[f]);
   if (activeEl) {
