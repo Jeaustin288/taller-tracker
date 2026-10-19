@@ -108,11 +108,15 @@ def upload_csv():
                 localizacion2=EXCLUDED.localizacion2,
                 produto=EXCLUDED.produto, ultima_toma=EXCLUDED.ultima_toma
         """, params, page_size=200)
+        # Eliminar vehículos que ya no están en el CSV
+        chasis_nuevos = [p[0] for p in params]
+        cur.execute("DELETE FROM vehiculos WHERE chasis != ALL(%s)", (chasis_nuevos,))
+        eliminados = cur.rowcount
         total = len(params)
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({"ok": True, "insertados": total, "actualizados": 0})
+        return jsonify({"ok": True, "insertados": total, "eliminados": eliminados})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
