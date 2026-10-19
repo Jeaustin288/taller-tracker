@@ -167,9 +167,9 @@ def guardar_taller():
             return jsonify({"ok": False, "error": "Chasis requerido"}), 400
         conn = get_db()
         cur = conn.cursor()
+        # Solo campos editables desde el modal — los sellos se manejan por /api/stamp
         fields = ["fecha_reporte","fecha_entrada","fecha_salida_est","origen_dano",
-                  "dano_logistica","dano_taller","notas",
-                  "fecha_entrega_log","fecha_recibido_taller","fecha_salida_real","fecha_salida_log"]
+                  "dano_logistica","dano_taller","notas"]
         vals = [data.get(f) or None for f in fields]
         cur.execute(f"""
             INSERT INTO taller_data (chasis, {", ".join(fields)})
