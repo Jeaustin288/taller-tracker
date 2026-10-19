@@ -108,26 +108,26 @@
   <div class="card mb-4">
     <div class="card-body p-0">
       <div class="d-flex" style="min-height:90px;">
-        <div class="d-flex flex-column align-items-center justify-content-center px-4 py-3" style="border-right:2px solid #e0e6ef;min-width:160px;">
+        <div class="d-flex flex-column align-items-center justify-content-center px-4 py-3 kpi-clickable" style="border-right:2px solid #e0e6ef;min-width:160px;cursor:pointer;" onclick="setFilter('all')" title="Ver todos">
           <div class="fs-1 fw-bold text-primary" id="kpi-total">—</div>
           <div class="fw-bold text-uppercase small" style="color:var(--brand);letter-spacing:.5px;">TOTAL EN TALLER</div>
         </div>
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="border-bottom:1px solid #e0e6ef;cursor:pointer;" onclick="setFilter('mecanica')" title="Filtrar Mecánica">
             <div class="fs-3 fw-bold me-3" style="color:var(--brand)" id="kpi-mecanica">—</div>
             <div class="fw-semibold text-uppercase small" style="color:var(--brand);">TOTAL TALLER MECÁNICA</div>
           </div>
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="cursor:pointer;" onclick="setFilter('pintura')" title="Filtrar Pintura">
             <div class="fs-3 fw-bold me-3" style="color:var(--accent)" id="kpi-pintura">—</div>
             <div class="fw-semibold text-uppercase small" style="color:var(--accent);">TOTAL TALLER PINTURA</div>
           </div>
         </div>
         <div class="d-flex flex-column flex-grow-1" style="border-right:2px solid #e0e6ef;">
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="border-bottom:1px solid #e0e6ef;cursor:pointer;" onclick="setFilter('mecanica')" title="Filtrar vencidos Mecánica">
             <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-mec">—</div>
             <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS</div>
           </div>
-          <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
+          <div class="d-flex align-items-center px-4 py-2 flex-grow-1 kpi-clickable" style="cursor:pointer;" onclick="setFilter('pintura')" title="Filtrar vencidos Pintura">
             <div class="fs-3 fw-bold me-3 text-danger" id="kpi-vencidos-pin">—</div>
             <div class="fw-semibold text-uppercase small text-danger">VENCIDOS/ATRASADOS</div>
           </div>
@@ -164,13 +164,7 @@
           <span class="fw-semibold"><i class="bi bi-table me-2 text-primary"></i>Vehículos en taller</span>
           <input type="text" id="search-chasis" class="form-control form-control-sm" style="max-width:220px;"
             placeholder="Buscar por chasis…" oninput="filterTable(this.value)">
-          <div class="ms-auto d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary active" id="filter-all" onclick="setFilter('all')">Todos</button>
-            <button class="btn btn-sm btn-outline-primary" id="filter-mecanica" onclick="setFilter('mecanica')">TALLER MECÁNICA</button>
-            <button class="btn btn-sm btn-outline-warning" id="filter-pintura" onclick="setFilter('pintura')">TALLER PINTURA</button>
-            <button class="btn btn-sm" style="border-color:#dc3545;color:#dc3545;" id="filter-defectuoso" onclick="setFilter('defectuoso')">DEFECTUOSO</button>
-            <button class="btn btn-sm btn-outline-info" id="filter-recambio" onclick="setFilter('recambio')">RECAMBIO</button>
-          </div>
+          <div class="ms-auto"></div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
