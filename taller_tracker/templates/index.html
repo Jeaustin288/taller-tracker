@@ -143,11 +143,11 @@
         <div class="d-flex flex-column flex-grow-1">
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1" style="border-bottom:1px solid #e0e6ef;">
             <div class="fs-3 fw-bold me-3" style="color:#6f42c1;" id="kpi-defectuosos">—</div>
-            <div class="fw-semibold text-uppercase small" style="color:#dc3545;">DEFECTUOSOS<br><span style="color:#6c757d;font-size:.7rem;">EN TALLER ↗</span></div>
+            <div class="fw-semibold text-uppercase small" style="color:#dc3545;">DEFECTUOSOS<br><span style="color:#6c757d;font-size:.7rem;">TOTAL ↗</span></div>
           </div>
           <div class="d-flex align-items-center px-4 py-2 flex-grow-1">
             <div class="fs-3 fw-bold me-3" style="color:#0dcaf0;" id="kpi-recambio">—</div>
-            <div class="fw-semibold text-uppercase small" style="color:#0dcaf0;">RECAMBIO<br><span style="color:#6c757d;font-size:.7rem;">EN TALLER ↗</span></div>
+            <div class="fw-semibold text-uppercase small" style="color:#0dcaf0;">RECAMBIO<br><span style="color:#6c757d;font-size:.7rem;">TOTAL ↗</span></div>
           </div>
         </div>
       </div>
@@ -582,8 +582,8 @@ function updateKPIs() {
 }
 
 function updateKPIsDefect() {
-  document.getElementById('kpi-defectuosos').textContent = allVehiculos.filter(v => (v.estado2||'').toUpperCase()==='DEFECTUOSO').length;
-  document.getElementById('kpi-recambio').textContent    = allVehiculos.filter(v => (v.estado2||'').toUpperCase()==='RECAMBIO').length;
+  document.getElementById('kpi-defectuosos').textContent = [...allVehiculos, ...allDefectuosos].filter(v => (v.estado2||'').toUpperCase()==='DEFECTUOSO').length;
+  document.getElementById('kpi-recambio').textContent    = [...allVehiculos, ...allDefectuosos].filter(v => (v.estado2||'').toUpperCase()==='RECAMBIO').length;
 }
 
 // ---- Edit modal ----
