@@ -482,8 +482,8 @@ function renderTable() {
       <td style="min-width:140px;">
         <div class="d-flex flex-column gap-1">${stampLog}${stampTaller}</div>
       </td>
-      <td style="min-width:140px;">
-        <div class="small mb-1 text-muted">${fSalida}</div>
+      <td style="min-width:150px;">
+        ${v.fecha_salida_est ? `<div class="small mb-1 text-muted fw-semibold">${fSalida}</div>` : ''}
         <div class="d-flex flex-column gap-1">${stampSalidaTaller}${stampSalidaLog}</div>
       </td>
       <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
