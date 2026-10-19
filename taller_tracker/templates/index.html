@@ -272,26 +272,10 @@
             <label class="form-label fw-semibold">Salida Estimada</label>
             <input type="date" class="form-control" id="m-fecha-salida">
           </div>
-          <div class="col-sm-6">
-            <label class="form-label fw-semibold text-primary"><i class="bi bi-truck me-1"></i>Fecha entrega Logística</label>
-            <input type="date" class="form-control" id="m-fecha-entrega-log">
-            <small class="text-muted">Logística confirma que entregó el vehículo</small>
-          </div>
-          <div class="col-sm-6">
-            <label class="form-label fw-semibold text-success"><i class="bi bi-wrench me-1"></i>Fecha recibido Taller</label>
-            <input type="date" class="form-control" id="m-fecha-recibido-taller">
-            <small class="text-muted">Taller confirma que recibió el vehículo</small>
-          </div>
-          <div class="col-sm-3">
-            <label class="form-label text-success" style="font-size:.8rem;"><i class="bi bi-wrench me-1"></i>Taller entrega (corrección)</label>
-            <input type="date" class="form-control form-control-sm" id="m-fecha-salida-real">
-            <small class="text-muted" style="font-size:.7rem;">Auto al sellar ✔ Taller entrega</small>
-          </div>
-          <div class="col-sm-3">
-            <label class="form-label text-primary" style="font-size:.8rem;"><i class="bi bi-truck me-1"></i>Log recibe (corrección)</label>
-            <input type="date" class="form-control form-control-sm" id="m-fecha-salida-log">
-            <small class="text-muted" style="font-size:.7rem;">Auto al sellar ✔ Log recibe</small>
-          </div>
+          <input type="hidden" id="m-fecha-entrega-log">
+          <input type="hidden" id="m-fecha-recibido-taller">
+          <input type="hidden" id="m-fecha-salida-real">
+          <input type="hidden" id="m-fecha-salida-log">
           <div class="col-sm-4">
             <label class="form-label fw-semibold">Daño Logística</label>
             <textarea class="form-control" id="m-dano-logistica" rows="2" placeholder="Daño de logística…"></textarea>
