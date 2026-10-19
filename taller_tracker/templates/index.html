@@ -280,10 +280,15 @@
             <input type="date" class="form-control" id="m-fecha-recibido-taller">
             <small class="text-muted">Taller confirma que recibió el vehículo</small>
           </div>
-          <div class="col-sm-4">
-            <label class="form-label fw-semibold text-success"><i class="bi bi-check-circle me-1"></i>Fecha salida real</label>
-            <input type="date" class="form-control" id="m-fecha-salida-real">
-            <small class="text-muted">Cuando taller entrega antes de lo estimado</small>
+          <div class="col-sm-3">
+            <label class="form-label text-success" style="font-size:.8rem;"><i class="bi bi-wrench me-1"></i>Taller entrega (corrección)</label>
+            <input type="date" class="form-control form-control-sm" id="m-fecha-salida-real">
+            <small class="text-muted" style="font-size:.7rem;">Auto al sellar ✔ Taller entrega</small>
+          </div>
+          <div class="col-sm-3">
+            <label class="form-label text-primary" style="font-size:.8rem;"><i class="bi bi-truck me-1"></i>Log recibe (corrección)</label>
+            <input type="date" class="form-control form-control-sm" id="m-fecha-salida-log">
+            <small class="text-muted" style="font-size:.7rem;">Auto al sellar ✔ Log recibe</small>
           </div>
           <div class="col-sm-4">
             <label class="form-label fw-semibold">Daño Logística</label>
@@ -458,11 +463,14 @@ function renderTable() {
       ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller',true)" title="Taller confirmó ${v.fecha_recibido_taller} — clic para reversar"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_recibido_taller)}</span>`
       : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_recibido_taller')" title="Taller confirma recibo — también registra Fecha Entrada"><i class="bi bi-wrench"></i> Taller</span>`;
 
-    // Salida Estimada: fecha + badge Pendiente/Entregado
+    // Salida Estimada: fecha + sellos Taller entrega / Logística recibe
     const fSalida = v.fecha_salida_est ? formatDate(v.fecha_salida_est) : '—';
-    const salidaBadge = entregado
-      ? `<span class="badge-entregado" title="Entregado el ${v.fecha_salida_real}">✓ Entregado</span>`
-      : `<span class="badge-pendiente" onclick="marcarEntregado('${esc(v.chasis)}')" title="Clic para marcar como entregado">Pendiente</span>`;
+    const stampSalidaTaller = v.fecha_salida_real
+      ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_salida_real',true)" title="Taller entregó el ${v.fecha_salida_real} — clic para reversar"><i class="bi bi-wrench"></i> Taller: ${fmtShort(v.fecha_salida_real)}</span>`
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_salida_real',false)" title="Taller confirma que entrega el vehículo"><i class="bi bi-wrench"></i> Taller entrega</span>`;
+    const stampSalidaLog = v.fecha_salida_log
+      ? `<span class="stamp-btn stamped" onclick="stampFecha('${esc(v.chasis)}','fecha_salida_log',true)" title="Logística recibió el ${v.fecha_salida_log} — clic para reversar"><i class="bi bi-truck"></i> Log: ${fmtShort(v.fecha_salida_log)}</span>`
+      : `<span class="stamp-btn" onclick="stampFecha('${esc(v.chasis)}','fecha_salida_log',false)" title="Logística confirma que recibe el vehículo"><i class="bi bi-truck"></i> Log recibe</span>`;
 
     return `<tr class="vehicle-row">
       <td><code class="chasis-code">${v.chasis}</code></td>
@@ -474,9 +482,9 @@ function renderTable() {
       <td style="min-width:140px;">
         <div class="d-flex flex-column gap-1">${stampLog}${stampTaller}</div>
       </td>
-      <td>
-        <div class="small mb-1">${fSalida}</div>
-        ${salidaBadge}
+      <td style="min-width:140px;">
+        <div class="small mb-1 text-muted">${fSalida}</div>
+        <div class="d-flex flex-column gap-1">${stampSalidaTaller}${stampSalidaLog}</div>
       </td>
       <td><span class="days-badge ${diasInfo.cls}">${diasInfo.label}</span></td>
       <td>${tallerTag}</td>
@@ -607,6 +615,7 @@ function openEdit(v) {
   document.getElementById('m-fecha-entrega-log').value      = v.fecha_entrega_log || '';
   document.getElementById('m-fecha-recibido-taller').value  = v.fecha_recibido_taller || '';
   document.getElementById('m-fecha-salida-real').value      = v.fecha_salida_real || '';
+  document.getElementById('m-fecha-salida-log').value       = v.fecha_salida_log || '';
   document.getElementById('m-dano-logistica').value  = v.dano_logistica || '';
   document.getElementById('m-dano-taller').value     = v.dano_taller || '';
   document.getElementById('m-origen-dano').value     = v.origen_dano || '';
@@ -624,6 +633,7 @@ async function guardarTaller() {
       fecha_entrega_log:     document.getElementById('m-fecha-entrega-log').value,
       fecha_recibido_taller: document.getElementById('m-fecha-recibido-taller').value,
       fecha_salida_real:     document.getElementById('m-fecha-salida-real').value,
+      fecha_salida_log:      document.getElementById('m-fecha-salida-log').value,
       dano_logistica:        document.getElementById('m-dano-logistica').value,
       dano_taller:           document.getElementById('m-dano-taller').value,
       origen_dano:           document.getElementById('m-origen-dano').value,

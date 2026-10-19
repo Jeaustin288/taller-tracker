@@ -43,7 +43,7 @@ def init_db():
         ("fecha_reporte","TEXT"),("origen_dano","TEXT"),
         ("dano_logistica","TEXT"),("dano_taller","TEXT"),
         ("fecha_entrega_log","TEXT"),("fecha_recibido_taller","TEXT"),
-        ("fecha_salida_real","TEXT"),
+        ("fecha_salida_real","TEXT"),("fecha_salida_log","TEXT"),
     ]:
         try:
             cur.execute(f"ALTER TABLE taller_data ADD COLUMN IF NOT EXISTS {col[0]} {col[1]}")
@@ -127,7 +127,7 @@ def vehiculos_taller():
                     ELSE 'mecanica' END AS taller,
                t.fecha_reporte, t.fecha_entrada, t.fecha_salida_est,
                t.problemas, t.origen_dano, t.dano_logistica, t.dano_taller, t.notas,
-               t.fecha_entrega_log, t.fecha_recibido_taller, t.fecha_salida_real
+               t.fecha_entrega_log, t.fecha_recibido_taller, t.fecha_salida_real, t.fecha_salida_log
         FROM vehiculos v
         LEFT JOIN taller_data t ON v.chasis = t.chasis
         WHERE v.ubicacion IN ('TALLER MECANICA', 'TALLER PINTURA')
@@ -169,7 +169,7 @@ def guardar_taller():
         cur = conn.cursor()
         fields = ["fecha_reporte","fecha_entrada","fecha_salida_est","origen_dano",
                   "dano_logistica","dano_taller","notas",
-                  "fecha_entrega_log","fecha_recibido_taller","fecha_salida_real"]
+                  "fecha_entrega_log","fecha_recibido_taller","fecha_salida_real","fecha_salida_log"]
         vals = [data.get(f) or None for f in fields]
         cur.execute(f"""
             INSERT INTO taller_data (chasis, {", ".join(fields)})
@@ -190,13 +190,12 @@ def stamp():
         data = request.json or {}
         chasis = (data.get("chasis") or "").strip()
         campo = data.get("campo")
-        if not chasis or campo not in ("fecha_entrega_log","fecha_recibido_taller"):
+        if not chasis or campo not in ("fecha_entrega_log","fecha_recibido_taller","fecha_salida_real","fecha_salida_log"):
             return jsonify({"ok": False, "error": "Parametros invalidos"}), 400
         hoy = date.today().isoformat()
         conn = get_db()
         cur = conn.cursor()
         if campo == "fecha_recibido_taller":
-            # Taller confirma recibo → también seteamos fecha_entrada automáticamente
             cur.execute("""
                 INSERT INTO taller_data (chasis, fecha_recibido_taller, fecha_entrada)
                 VALUES (%s,%s,%s)
@@ -241,7 +240,7 @@ def stamp_borrar():
         data = request.json or {}
         chasis = (data.get("chasis") or "").strip()
         campo = data.get("campo")
-        if not chasis or campo not in ("fecha_entrega_log","fecha_recibido_taller"):
+        if not chasis or campo not in ("fecha_entrega_log","fecha_recibido_taller","fecha_salida_real","fecha_salida_log"):
             return jsonify({"ok": False, "error": "Parametros invalidos"}), 400
         conn = get_db()
         cur = conn.cursor()
