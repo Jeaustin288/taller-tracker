@@ -244,8 +244,7 @@ def stamp_borrar():
             return jsonify({"ok": False, "error": "Parametros invalidos"}), 400
         conn = get_db()
         cur = conn.cursor()
-        extra = ", fecha_entrada=NULL" if campo == "fecha_recibido_taller" else ""
-        cur.execute(f"UPDATE taller_data SET {campo}=NULL{extra} WHERE chasis=%s", (chasis,))
+        cur.execute(f"UPDATE taller_data SET {campo}=NULL WHERE chasis=%s", (chasis,))
         conn.commit()
         cur.close()
         conn.close()
