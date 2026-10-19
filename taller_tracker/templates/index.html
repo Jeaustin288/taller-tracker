@@ -165,6 +165,8 @@
             <button class="btn btn-sm btn-outline-secondary active" id="filter-all" onclick="setFilter('all')">Todos</button>
             <button class="btn btn-sm btn-outline-primary" id="filter-mecanica" onclick="setFilter('mecanica')">TALLER MECÁNICA</button>
             <button class="btn btn-sm btn-outline-warning" id="filter-pintura" onclick="setFilter('pintura')">TALLER PINTURA</button>
+            <button class="btn btn-sm" style="border-color:#dc3545;color:#dc3545;" id="filter-defectuoso" onclick="setFilter('defectuoso')">DEFECTUOSO</button>
+            <button class="btn btn-sm btn-outline-info" id="filter-recambio" onclick="setFilter('recambio')">RECAMBIO</button>
           </div>
         </div>
         <div class="card-body p-0">
@@ -439,10 +441,14 @@ async function marcarEntregado(chasis) {
 function renderTable() {
   const tbody = document.getElementById('taller-tbody');
   let data = allVehiculos;
-  if (currentFilter !== 'all') data = data.filter(v => v.taller === currentFilter);
+  if (currentFilter === 'mecanica' || currentFilter === 'pintura') {
+    data = data.filter(v => v.taller === currentFilter);
+  } else if (currentFilter === 'defectuoso' || currentFilter === 'recambio') {
+    data = data.filter(v => (v.estado2 || '').toUpperCase() === currentFilter.toUpperCase());
+  }
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay vehículos${currentFilter !== 'all' ? ' en ' + currentFilter : ''}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay vehículos${currentFilter !== 'all' ? ' con filtro ' + currentFilter : ''}</td></tr>`;
     return;
   }
 
@@ -542,9 +548,9 @@ function renderTableDefect() {
 // ---- Filters ----
 function setFilter(f) {
   currentFilter = f;
-  ['all','mecanica','pintura'].forEach(id => {
+  ['all','mecanica','pintura','defectuoso','recambio'].forEach(id => {
     const el = document.getElementById('filter-'+id);
-    if (el) { el.classList.remove('active'); }
+    if (el) el.classList.remove('active');
   });
   document.getElementById('filter-'+f).classList.add('active');
   renderTable();
