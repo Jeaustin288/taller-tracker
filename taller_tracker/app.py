@@ -374,6 +374,7 @@ def descargar_csv_defectuosos():
 
 @app.route("/api/descargar_csv")
 def descargar_csv():
+    from flask import Response, send_file
     tf = request.args.get("taller","all")
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -381,32 +382,99 @@ def descargar_csv():
         SELECT v.chasis,v.marca,v.modelo,v.color,v.estado2,v.ubicacion,
                CASE WHEN v.ubicacion='TALLER PINTURA' THEN 'pintura' ELSE 'mecanica' END AS taller,
                t.fecha_reporte,t.fecha_entrada,t.fecha_salida_est,
-               t.dano_logistica,t.dano_taller,t.origen_dano,t.notas
+               t.dano_logistica,t.dano_taller,t.origen_dano,t.notas,
+               t.fecha_salida_real,t.fecha_salida_log
         FROM vehiculos v LEFT JOIN taller_data t ON v.chasis=t.chasis
         WHERE v.ubicacion IN ('TALLER MECANICA','TALLER PINTURA')
         ORDER BY v.ubicacion,v.estado2,v.chasis
     """)
     rows = cur.fetchall(); cur.close(); conn.close()
-    if tf != "all":
-        rows = [r for r in rows if r["taller"]==tf]
-    def dias(e,s):
-        if not e: return ""
-        try:
-            d1=date.fromisoformat(str(e)[:10])
-            d2=date.fromisoformat(str(s)[:10]) if s and str(s)[:10]>"2000-01-01" else date.today()
-            return f"{(d2-d1).days}d"
-        except: return ""
-    hdrs=["Chasis","Vehiculo","Ubicacion","Estado","Fecha Reporte","Entrada Taller","Salida Estimada","Dias","Dano Logistica","Dano Taller","Origen Dano","Notas"]
-    lines=[",".join(f'"{h}"' for h in hdrs)]
-    for r in rows:
-        veh=f"{r['marca'] or ''} {r['modelo'] or ''} {r['color'] or ''}".strip()
-        row=[r["chasis"] or "",veh,r["ubicacion"] or "",r["estado2"] or "",
-             r["fecha_reporte"] or "",r["fecha_entrada"] or "",r["fecha_salida_est"] or "",dias(r["fecha_entrada"],r["fecha_salida_est"]),
-             r["dano_logistica"] or "",r["dano_taller"] or "",r["origen_dano"] or "",r["notas"] or ""]
-        lines.append(",".join(f'"{str(c).replace(chr(34),chr(34)+chr(34))}"' for c in row))
-    from flask import Response
-    return Response("﻿"+"\n".join(lines),mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition":f"attachment; filename=control_talleres_{tf}.csv"})
+    hoy = date.today()
+    ini_sem = hoy - __import__('datetime').timedelta(days=hoy.weekday())
+    fin_sem = ini_sem + __import__('datetime').timedelta(days=6)
+    def get_date(v):
+        try: return date.fromisoformat(str(v)[:10]) if v else None
+        except: return None
+    if tf == "mecanica":
+        rows = [r for r in rows if r["taller"]=="mecanica"]
+    elif tf == "pintura":
+        rows = [r for r in rows if r["taller"]=="pintura"]
+    elif tf == "defectuoso":
+        rows = [r for r in rows if (r["estado2"] or "").upper()=="DEFECTUOSO"]
+    elif tf == "recambio":
+        rows = [r for r in rows if (r["estado2"] or "").upper()=="RECAMBIO"]
+    elif tf == "fin-mecanica":
+        rows = [r for r in rows if r["taller"]=="mecanica" and get_date(r["fecha_salida_est"]) and ini_sem <= get_date(r["fecha_salida_est"]) <= fin_sem]
+    elif tf == "fin-pintura":
+        rows = [r for r in rows if r["taller"]=="pintura" and get_date(r["fecha_salida_est"]) and ini_sem <= get_date(r["fecha_salida_est"]) <= fin_sem]
+    elif tf == "vencidos-mecanica":
+        rows = [r for r in rows if r["taller"]=="mecanica" and get_date(r["fecha_salida_est"]) and get_date(r["fecha_salida_est"]) < hoy]
+    elif tf == "vencidos-pintura":
+        rows = [r for r in rows if r["taller"]=="pintura" and get_date(r["fecha_salida_est"]) and get_date(r["fecha_salida_est"]) < hoy]
+
+    def dias_restantes(e, s):
+        d_e = get_date(e); d_s = get_date(s)
+        if not d_e: return ""
+        if d_s: return f"{(d_s - hoy).days}d"
+        return f"{(hoy - d_e).days}d en taller"
+
+    # Crear Excel con openpyxl
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers
+    from openpyxl.utils import get_column_letter
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Control Talleres"
+
+    hdrs = ["Chasis","Vehículo","Ubicación","Estado","Fecha Reporte","Entrada Taller",
+            "Salida Estimada","Días","Daño Logística","Daño Taller","Origen Daño","Notas"]
+    col_widths = [22, 28, 20, 14, 16, 16, 16, 8, 22, 30, 18, 50]
+
+    # Estilo encabezado
+    hdr_fill = PatternFill("solid", fgColor="1B3A6B")
+    hdr_font = Font(bold=True, color="FFFFFF", size=10)
+    thin = Side(style="thin", color="CCCCCC")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    wrap = Alignment(wrap_text=True, vertical="top")
+    center = Alignment(horizontal="center", vertical="top", wrap_text=True)
+
+    ws.append(hdrs)
+    for ci, cell in enumerate(ws[1], 1):
+        cell.fill = hdr_fill
+        cell.font = hdr_font
+        cell.alignment = center
+        cell.border = border
+        ws.column_dimensions[get_column_letter(ci)].width = col_widths[ci-1]
+    ws.row_dimensions[1].height = 28
+
+    # Filas alternas
+    fill_alt = PatternFill("solid", fgColor="F0F4FF")
+    for ri, r in enumerate(rows, 2):
+        veh = f"{r['marca'] or ''} {r['modelo'] or ''} {r['color'] or ''}".strip()
+        entregado = r.get("fecha_salida_real") and r.get("fecha_salida_log")
+        dias_val = "Entregado" if entregado else dias_restantes(r["fecha_entrada"], r["fecha_salida_est"])
+        fila = [r["chasis"] or "", veh, r["ubicacion"] or "", r["estado2"] or "",
+                str(r["fecha_reporte"] or ""), str(r["fecha_entrada"] or ""),
+                str(r["fecha_salida_est"] or ""), dias_val,
+                r["dano_logistica"] or "", r["dano_taller"] or "",
+                r["origen_dano"] or "", r["notas"] or ""]
+        ws.append(fila)
+        fill = fill_alt if ri % 2 == 0 else None
+        for ci, cell in enumerate(ws[ri], 1):
+            cell.border = border
+            cell.alignment = wrap if ci == 12 else Alignment(vertical="top", wrap_text=True)
+            if fill: cell.fill = fill
+        ws.row_dimensions[ri].height = 40
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    nombre = f"control_talleres_{tf}.xlsx"
+    return send_file(buf, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                     as_attachment=True, download_name=nombre)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
