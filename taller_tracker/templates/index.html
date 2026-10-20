@@ -348,6 +348,7 @@ async function loadVehiculos() {
     allVehiculos = await res.json();
     renderTable();
     updateKPIs();
+    updateKPIsDefect();
     document.getElementById('last-update-label').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
   } catch(e) { console.error(e); }
 }
