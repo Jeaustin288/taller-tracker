@@ -437,6 +437,17 @@ function renderTable() {
     data = allVehiculos.filter(v => v.taller === 'pintura' && v.fecha_salida_est && new Date(v.fecha_salida_est) < hoy);
   }
 
+  // Ordenar: vencidos primero (más atrasado arriba), luego por días restantes asc, sin fecha al final
+  data = [...data].sort((a, b) => {
+    const hoyMs = hoy.getTime();
+    const dA = a.fecha_salida_est ? new Date(a.fecha_salida_est).getTime() - hoyMs : null;
+    const dB = b.fecha_salida_est ? new Date(b.fecha_salida_est).getTime() - hoyMs : null;
+    if (dA === null && dB === null) return 0;
+    if (dA === null) return 1;   // sin fecha → al final
+    if (dB === null) return -1;
+    return dA - dB; // más urgente primero (negativo = vencido)
+  });
+
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay vehículos${currentFilter !== 'all' ? ' con filtro ' + currentFilter : ''}</td></tr>`;
     return;
